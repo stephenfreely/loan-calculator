@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Loan & LVR Calculator</title>
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --text: #1a2332;
+      --muted: #5c6b7a;
+      --border: #dde3ea;
+      --loan: #3b6fd9;
+      --loan-light: #e8f0fe;
+      --cash: #1f9d6a;
+      --cash-light: #e6f7ef;
+      --fees: #e07b39;
+      --fees-light: #fdf0e8;
+      --interest: #9333ea;
+      --interest-light: #f3e8ff;
+      --principal-pay: #0284c7;
+      --principal-pay-light: #e0f2fe;
+      --warn: #d97706;
+      --danger: #dc2626;
+      --shadow: 0 8px 30px rgba(26, 35, 50, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 24px 16px 48px;
+    }
+
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 650;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card h2 .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--loan-light);
+      color: var(--loan);
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .inputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .inputs-grid.three-col {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    @media (max-width: 768px) {
+      .inputs-grid.three-col { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .inputs-grid { grid-template-columns: 1fr; }
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .field .hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-row .prefix,
+    .input-row .suffix {
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    input[type="number"] {
+      flex: 1;
+      font-size: 1.15rem;
+      font-weight: 600;
+      padding: 10px 12px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--loan);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-top: 10px;
+      accent-color: var(--loan);
+      cursor: pointer;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle span {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle span::after {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .toggle input:checked + span { background: var(--cash); }
+    .toggle input:checked + span::after { transform: translateX(20px); }
+
+    .preset-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .preset-btns button {
+      padding: 8px 14px;
+      border: 2px solid var(--border);
+      background: white;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text);
+    }
+
+    .preset-btns button:hover,
+    .preset-btns button.active {
+      border-color: var(--loan);
+      background: var(--loan-light);
+      color: var(--loan);
+    }
+
+    /* Summary stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 640px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .stat {
+      background: var(--bg);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+
+    .stat .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 4px;
+    }
+
+    .stat .value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .stat .value.loan { color: var(--loan); }
+    .stat .value.cash { color: var(--cash); }
+    .stat .value.lvr { color: var(--text); }
+    .stat .value.lvr.warn { color: var(--warn); }
+    .stat .value.lvr.danger { color: var(--danger); }
+    .stat .value.repay { color: var(--interest); }
+
+    .stats.repay-stats {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 640px) {
+      .stats.repay-stats { grid-template-columns: 1fr; }
+    }
+
+    .bar-segment.interest { background: var(--interest); }
+    .bar-segment.principal-pay { background: var(--principal-pay); }
+
+    .repay-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 16px;
+    }
+
+    .repay-table th,
+    .repay-table td {
+      padding: 10px 12px;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .repay-table th:first-child,
+    .repay-table td:first-child { text-align: left; }
+
+    .repay-table th {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      font-weight: 600;
+      background: var(--bg);
+    }
+
+    .repay-table tbody tr:hover { background: var(--bg); }
+
+    .repay-table .interest-cell { color: var(--interest); font-weight: 600; }
+    .repay-table .principal-cell { color: var(--principal-pay); font-weight: 600; }
+
+    /* Visual bars */
+    .visual-block {
+      margin-bottom: 28px;
+    }
+
+    .visual-block:last-child { margin-bottom: 0; }
+
+    .visual-title {
+      font-size: 0.95rem;
+      font-weight: 650;
+      margin-bottom: 4px;
+    }
+
+    .visual-subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .bar-wrap {
+      position: relative;
+      height: 56px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      background: var(--bg);
+      border: 2px solid var(--border);
+    }
+
+    .bar-container .bar-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .bar-container .bar-total strong {
+      font-size: 1.1rem;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bar-segment {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: white;
+      transition: width 0.4s ease;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
+
+    .bar-segment.loan { background: var(--loan); }
+    .bar-segment.deposit { background: var(--cash); }
+    .bar-segment.fees { background: var(--fees); }
+
+    .bar-segment.small-text {
+      font-size: 0.65rem;
+    }
+
+    .bar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* LVR explainer */
+    .lvr-formula {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: 12px;
+      margin: 20px 0;
+      font-size: 1rem;
+    }
+
+    .formula-box {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .formula-box .fb-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .formula-box .fb-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .formula-box.loan { border-color: var(--loan); }
+    .formula-box.loan .fb-value { color: var(--loan); }
+    .formula-box.price { border-color: var(--text); }
+    .formula-box.result { border-color: var(--cash); background: var(--cash-light); }
+    .formula-box.result .fb-value { color: var(--cash); font-size: 1.5rem; }
+
+    .formula-op {
+      font-size: 1.5rem;
+      font-weight: 300;
+      color: var(--muted);
+    }
+
+    .plain-english {
+      background: var(--loan-light);
+      border-left: 4px solid var(--loan);
+      padding: 16px 18px;
+      border-radius: 0 10px 10px 0;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .plain-english strong { color: var(--loan); }
+
+    /* Cost breakdown table */
+    .cost-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .cost-table td {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cost-table td:last-child {
+      text-align: right;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cost-table tr:last-child td {
+      border-bottom: none;
+      font-weight: 700;
+      font-size: 1rem;
+      padding-top: 14px;
+    }
+
+    .cost-table .subtotal td {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .alert.show { display: block; }
+    .alert.warn { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .alert.danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert.info { background: var(--cash-light); color: #065f46; border: 1px solid #6ee7b7; }
+
+    .house-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .subsection {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .subsection h3 {
+      font-size: 0.95rem;
+      font-weight: 650;
+      margin-bottom: 4px;
+    }
+
+    .subsection .sub-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .reset-link {
+      font-size: 0.8rem;
+      color: var(--loan);
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 6px;
+      display: inline-block;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    .reset-link:hover { text-decoration: underline; }
+
+    .auto-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--cash);
+      background: var(--cash-light);
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .fhbg-card {
+      border-color: #a7d4b8;
+      background: linear-gradient(180deg, #f8fdf9 0%, var(--surface) 120px);
+    }
+
+    .fhbg-card h2 .badge {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .fhbg-disclaimer {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 20px;
+    }
+
+    .fhbg-disclaimer a {
+      color: var(--loan);
+      font-weight: 600;
+    }
+
+    select {
+      width: 100%;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 12px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: white;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--cash);
+    }
+
+    .fhbg-stats {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 768px) {
+      .fhbg-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .savings-row td {
+      color: var(--cash);
+      font-size: 0.85rem;
+    }
+
+    .scheme-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 0.8rem;
+      font-weight: 650;
+      padding: 6px 12px;
+      border-radius: 999px;
+      margin-top: 12px;
+    }
+
+    .stat .value.lmi { color: var(--warn); }
+
+    .extras-note {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: var(--bg);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .extras-note strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="house-icon">🏠</div>
+      <h1>Home Loan & LVR Calculator</h1>
+      <p>Adjust your cash contribution and see exactly how your loan-to-value ratio (LVR) is calculated — no spreadsheet skills needed.</p>
+      <p class="fhbg-disclaimer" style="margin-top: 12px; max-width: 640px; margin-left: auto; margin-right: auto;">
+        Rates aligned to <strong>Revenue NSW</strong> transfer duty (2025/26), <strong>FHBAS</strong> (from 1 Jul 2025), and the <strong>5% Deposit Scheme</strong> (from 1 Oct 2025). Estimates only — not legal or financial advice.
+      </p>
+    </header>
+
+    <!-- Inputs -->
+    <div class="card">
+      <h2>Your numbers</h2>
+      <div class="inputs-grid">
+        <div class="field">
+          <label for="price">Purchase price</label>
+          <p class="hint">The price of the property you're buying</p>
+          <div class="input-row">
+            <span class="prefix">$</span>
+            <input type="number" id="price" value="900000" step="10000" min="100000">
+          </div>
+          <input type="range" id="priceSlider" min="500000" max="1500000" step="10000" value="900000">
+        </div>
+        <div class="field">
+          <label for="cash">Cash contribution</label>
+          <p class="hint">Total cash you pay upfront (deposit + stamp duty + fees)</p>
+          <div class="input-row">
+            <span class="prefix">$</span>
+            <input type="number" id="cash" value="213384" step="1000" min="0">
+          </div>
+          <input type="range" id="cashSlider" min="100000" max="500000" step="1000" value="213384">
+        </div>
+      </div>
+      <div class="field" style="margin-top: 20px;">
+        <label>First home buyer?</label>
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="fhb" checked>
+            <span></span>
+          </label>
+          <span id="fhbLabel">Yes — stamp duty concessions apply</span>
+        </div>
+      </div>
+      <div class="preset-btns">
+        <span style="font-size:0.85rem;color:var(--muted);align-self:center;margin-right:4px;">Quick presets:</span>
+        <button data-price="800000" data-cash="200000">$800k / $200k cash</button>
+        <button data-price="900000" data-cash="213384" class="active">$900k / 79% LVR</button>
+        <button data-price="1000000" data-cash="254090">$1M / 79% LVR</button>
+        <button data-price="900000" data-cash="240000">$900k / $240k cash</button>
+      </div>
+
+      <div class="subsection">
+        <h3>Stamp duty &amp; fees <span class="auto-badge" id="stampAutoBadge">Auto</span> <span class="auto-badge" id="feesAutoBadge">Auto</span></h3>
+        <p class="sub-desc">Stamp duty, conveyancing, searches, and registry fees are estimated from your purchase price. Adjust any value if you have a formal quote.</p>
+        <div class="inputs-grid">
+          <div class="field">
+            <label for="stamp">Stamp duty (transfer of land)</label>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="stamp" value="19706" step="100" min="0">
+            </div>
+            <button type="button" class="reset-link" id="resetStamp">↺ Reset to calculated amount</button>
+          </div>
+          <div class="field">
+            <label for="legal">Legal fees</label>
+            <p class="hint">Solicitor / contract review (typical NSW range $900–$1,500)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="legal" value="1000" step="50" min="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="conveyancing">Conveyancing fees</label>
+            <p class="hint">Settlement &amp; lodgement — scales with property price (~$1,300–$2,400)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="conveyancing" value="1700" step="50" min="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="searches">Searches &amp; certificates</label>
+            <p class="hint">Title, council 10.7, water, rates etc. — estimate by price (~$300–$650)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="searches" value="450" step="10" min="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="reg">Land registry (NSW LRS)</label>
+            <p class="hint">Statutory 2025/26: ~$352 transfer registration + ~$176 mortgage (PEXA extra)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="reg" value="528" step="10" min="0">
+            </div>
+            <button type="button" class="reset-link" id="resetFees">↺ Reset all fees to estimates</button>
+          </div>
+          <div class="field">
+            <label for="misc">Miscellaneous (rates, etc.)</label>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="misc" value="1000" step="100" min="0">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- First Home Guarantee NSW -->
+    <div class="card fhbg-card">
+      <h2>First Home Guarantee <span class="badge">NSW · 5% deposit</span></h2>
+      <p class="fhbg-disclaimer">
+        Estimates for the Australian Government <strong>First Home Guarantee</strong> (5% Deposit Scheme, expanded Oct 2025)
+        combined with NSW <strong>First Home Buyers Assistance Scheme</strong> stamp duty concessions.
+        Uses your purchase price and fee inputs above. Scheme does not pay stamp duty or legal costs — you need extra cash for those.
+        <a href="https://www.housingaustralia.gov.au/first-home-guarantee-faqs" target="_blank" rel="noopener">Housing Australia</a> ·
+        <a href="https://www.revenue.nsw.gov.au/grants-schemes/assistance-scheme" target="_blank" rel="noopener">Revenue NSW</a>
+      </p>
+
+      <div class="field" style="margin-bottom: 20px;">
+        <label for="fhbgLocation">NSW location (scheme price cap)</label>
+        <p class="hint">From 1 Oct 2025: metro/major regional cap $1.5M; rest of NSW $800k</p>
+        <select id="fhbgLocation">
+          <option value="metro" selected>Sydney, Newcastle, Illawarra &amp; Lake Macquarie — up to $1,500,000</option>
+          <option value="regional">Rest of NSW — up to $800,000</option>
+        </select>
+      </div>
+
+      <div id="fhbgAlert" class="alert"></div>
+
+      <div class="stats fhbg-stats">
+        <div class="stat">
+          <div class="label">5% deposit (scheme minimum)</div>
+          <div class="value cash" id="fhbgDeposit">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Stamp duty (NSW FHB concession)</div>
+          <div class="value" id="fhbgStamp" style="color:var(--fees)">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Legal &amp; other fees</div>
+          <div class="value" id="fhbgFees">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Total cash upfront</div>
+          <div class="value cash" id="fhbgCashTotal">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Loan amount</div>
+          <div class="value loan" id="fhbgLoan">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">LVR (property)</div>
+          <div class="value" id="fhbgLvr">—</div>
+        </div>
+      </div>
+
+      <div class="plain-english" id="fhbgPlainEnglish" style="margin: 20px 0; background:#dcfce7; border-color:#22c55e;"></div>
+
+      <div class="visual-block">
+        <div class="visual-title">Your upfront cash under the 5% scheme</div>
+        <div class="visual-subtitle">5% deposit on the property price, plus stamp duty and fees paid separately</div>
+        <div class="bar-container" id="fhbgCashBar"></div>
+        <div class="bar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> 5% deposit — <strong id="fhbgLegDeposit">—</strong></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--fees)"></div> Stamp duty &amp; fees — <strong id="fhbgLegCosts">—</strong></div>
+        </div>
+      </div>
+
+      <table class="cost-table">
+        <tr><td>Purchase price</td><td id="fhbgCostPrice">—</td></tr>
+        <tr><td>5% deposit (First Home Guarantee minimum)</td><td id="fhbgCostDeposit">—</td></tr>
+        <tr><td>Stamp duty — NSW FHB concession</td><td id="fhbgCostStamp">—</td></tr>
+        <tr class="savings-row"><td>Stamp duty without concession (estimate)</td><td id="fhbgCostStampFull">—</td></tr>
+        <tr class="savings-row"><td>Stamp duty saving</td><td id="fhbgCostStampSaving">—</td></tr>
+        <tr><td>Legal fees</td><td id="fhbgCostLegal">—</td></tr>
+        <tr><td>Conveyancing fees</td><td id="fhbgCostConveyancing">—</td></tr>
+        <tr><td>Searches &amp; certificates</td><td id="fhbgCostSearches">—</td></tr>
+        <tr><td>Land registry (NSW LRS)</td><td id="fhbgCostReg">—</td></tr>
+        <tr><td>Miscellaneous</td><td id="fhbgCostMisc">—</td></tr>
+        <tr><td>Total cash you need upfront</td><td id="fhbgCostCashTotal">—</td></tr>
+        <tr><td>Loan amount (approx.)</td><td id="fhbgCostLoan">—</td></tr>
+        <tr><td>Scheme price cap (your area)</td><td id="fhbgCostCap">—</td></tr>
+      </table>
+
+      <div class="subsection">
+        <h3>Monthly repayments <span class="auto-badge">Scheme loan</span></h3>
+        <p class="sub-desc">Principal &amp; interest on the 5% scheme loan above (also updates your custom scenario below).</p>
+
+        <div class="inputs-grid" style="margin-bottom: 16px;">
+          <div class="field">
+            <label for="rate">Interest rate</label>
+            <div class="input-row">
+              <input type="number" id="rate" value="6.30" step="0.05" min="0" max="20">
+              <span class="suffix">% p.a.</span>
+            </div>
+            <input type="range" id="rateSlider" min="3" max="12" step="0.05" value="6.30">
+          </div>
+          <div class="field">
+            <label for="term">Loan term</label>
+            <div class="input-row">
+              <input type="number" id="term" value="30" step="1" min="1" max="40">
+              <span class="suffix">years</span>
+            </div>
+            <input type="range" id="termSlider" min="5" max="30" step="1" value="30">
+          </div>
+        </div>
+
+        <div class="stats fhbg-stats">
+          <div class="stat">
+            <div class="label">Monthly repayment</div>
+            <div class="value repay" id="fhbgStatRepayment">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Total interest (life of loan)</div>
+            <div class="value" id="fhbgStatTotalInterest" style="color:var(--interest)">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Total repaid</div>
+            <div class="value" id="fhbgStatTotalRepaid">—</div>
+          </div>
+        </div>
+
+        <div class="plain-english" id="fhbgRepayPlainEnglish" style="margin-top: 16px; background: var(--interest-light); border-color: var(--interest);"></div>
+
+        <div class="visual-block" style="margin-top: 20px;">
+          <div class="visual-title">First monthly payment (scheme loan)</div>
+          <div class="visual-subtitle">Interest vs principal — same payment each month, split changes over time</div>
+          <div class="bar-container" id="fhbgFirstPaymentBar"></div>
+          <div class="bar-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--interest)"></div> Interest — <strong id="fhbgLegFirstInterest">—</strong></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--principal-pay)"></div> Principal — <strong id="fhbgLegFirstPrincipal">—</strong></div>
+          </div>
+        </div>
+
+        <table class="repay-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Monthly payment</th>
+              <th>Interest</th>
+              <th>Principal</th>
+              <th>Loan remaining</th>
+            </tr>
+          </thead>
+          <tbody id="fhbgRepaySchedule"></tbody>
+        </table>
+      </div>
+
+      <div class="scheme-pill" id="fhbgSchemePill">✓ No LMI with government guarantee (if eligible)</div>
+    </div>
+
+    <!-- Summary (custom cash scenario) -->
+    <div class="card">
+      <h2>At a glance <span class="badge">Your scenario</span></h2>
+      <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Summary for your chosen <strong>cash contribution</strong> — separate from the First Home Guarantee 5% estimate above.</p>
+      <div class="stats">
+        <div class="stat">
+          <div class="label">Total costs</div>
+          <div class="value" id="statTotal">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Your cash</div>
+          <div class="value cash" id="statCash">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Loan amount</div>
+          <div class="value loan" id="statLoan">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">LVR</div>
+          <div class="value lvr" id="statLvr">—</div>
+        </div>
+      </div>
+
+      <div class="subsection" style="margin-top: 20px; padding-top: 0; border-top: none;">
+        <h3 style="margin-bottom: 12px;">LMI &amp; cash buffer <span class="auto-badge" id="bufferAutoBadge">Auto</span></h3>
+        <div class="stats fhbg-stats">
+          <div class="stat">
+            <div class="label">Est. LMI (your scenario)</div>
+            <div class="value lmi" id="statLmi">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Cash buffer</div>
+            <div class="value cash" id="statBuffer">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Total savings to aim for</div>
+            <div class="value" id="statSavingsTarget">—</div>
+          </div>
+        </div>
+        <div class="field" style="margin-top: 16px;">
+          <label for="buffer">Cash buffer (after settlement)</label>
+          <p class="hint" id="bufferHint">Reserve for emergencies — default updates with your repayments ($20k min or 3 months)</p>
+          <div class="input-row">
+            <span class="prefix">$</span>
+            <input type="number" id="buffer" value="20000" step="1000" min="0">
+          </div>
+          <input type="range" id="bufferSlider" min="0" max="150000" step="1000" value="20000">
+          <button type="button" class="reset-link" id="resetBuffer">↺ Reset to recommended amount</button>
+        </div>
+        <div class="extras-note" id="lmiBufferNote"></div>
+      </div>
+
+      <div id="alertBox" class="alert"></div>
+    </div>
+
+    <!-- LVR Visual Explainer -->
+    <div class="card">
+      <h2>What is LVR? <span class="badge">Explained simply</span></h2>
+
+      <div class="plain-english" id="plainEnglish"></div>
+
+      <div class="lvr-formula">
+        <div class="formula-box loan">
+          <div class="fb-label">Your loan</div>
+          <div class="fb-value" id="formulaLoan">—</div>
+        </div>
+        <div class="formula-op">÷</div>
+        <div class="formula-box price">
+          <div class="fb-label">Property price</div>
+          <div class="fb-value" id="formulaPrice">—</div>
+        </div>
+        <div class="formula-op">=</div>
+        <div class="formula-box result">
+          <div class="fb-label">LVR</div>
+          <div class="fb-value" id="formulaLvr">—</div>
+        </div>
+      </div>
+
+      <div class="visual-block">
+        <div class="visual-title">Picture the property price</div>
+        <div class="visual-subtitle">Each part of the bar shows who "owns" that slice of the home's value</div>
+        <div class="bar-container" id="propertyBar"></div>
+        <div class="bar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--loan)"></div> Bank's share (loan) — <strong id="legLoanPct">—</strong></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Your share (deposit) — <strong id="legDepositPct">—</strong></div>
+        </div>
+      </div>
+
+      <div class="visual-block">
+        <div class="visual-title">Where does your cash go?</div>
+        <div class="visual-subtitle">Your upfront cash covers both the deposit <em>and</em> extra purchase costs</div>
+        <div class="bar-container" id="cashBar"></div>
+        <div class="bar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Deposit (toward property) — <strong id="legDeposit">—</strong></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--fees)"></div> Stamp duty & fees — <strong id="legFees">—</strong></div>
+        </div>
+      </div>
+
+      <div class="visual-block">
+        <div class="visual-title">How everything adds up</div>
+        <div class="visual-subtitle">Total purchase costs = your cash + the bank's loan</div>
+        <div class="bar-container" id="totalBar"></div>
+        <div class="bar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Your cash — <strong id="legCashTotal">—</strong></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--loan)"></div> Bank loan — <strong id="legLoanTotal">—</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly repayments (custom cash scenario) -->
+    <div class="card">
+      <h2>Monthly repayments <span class="badge">Your cash scenario</span></h2>
+      <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Repayments on the loan based on your <strong>cash contribution</strong> input above. Interest rate and loan term are set in the First Home Guarantee section.</p>
+
+      <div class="stats repay-stats">
+        <div class="stat">
+          <div class="label">Monthly repayment</div>
+          <div class="value repay" id="statRepayment">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Total interest paid</div>
+          <div class="value" id="statTotalInterest" style="color:var(--interest)">—</div>
+        </div>
+        <div class="stat">
+          <div class="label">Total repaid</div>
+          <div class="value" id="statTotalRepaid">—</div>
+        </div>
+      </div>
+
+      <div class="plain-english" id="repayPlainEnglish" style="margin-top: 20px; background: var(--interest-light); border-color: var(--interest);"></div>
+
+      <div class="visual-block" style="margin-top: 24px;">
+        <div class="visual-title">What's in your first monthly payment?</div>
+        <div class="visual-subtitle">Early on, most of each payment goes to interest — the rest pays down the loan</div>
+        <div class="bar-container" id="firstPaymentBar"></div>
+        <div class="bar-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--interest)"></div> Interest — <strong id="legFirstInterest">—</strong></div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--principal-pay)"></div> Principal — <strong id="legFirstPrincipal">—</strong></div>
+        </div>
+      </div>
+
+      <div class="visual-block">
+        <div class="visual-title">How your payments change over time</div>
+        <div class="visual-subtitle">Same total each month — but the split shifts as you pay off the loan</div>
+        <table class="repay-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Monthly payment</th>
+              <th>Interest portion</th>
+              <th>Principal portion</th>
+              <th>Loan remaining</th>
+            </tr>
+          </thead>
+          <tbody id="repaySchedule"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Cost breakdown -->
+    <div class="card">
+      <h2>Cost breakdown</h2>
+      <table class="cost-table">
+        <tr><td>Purchase price</td><td id="costPrice">—</td></tr>
+        <tr><td>Stamp duty (transfer of land)</td><td id="costStamp">—</td></tr>
+        <tr><td>Legal fees</td><td id="costLegal">—</td></tr>
+        <tr><td>Conveyancing fees</td><td id="costConveyancing">—</td></tr>
+        <tr><td>Searches &amp; certificates</td><td id="costSearches">—</td></tr>
+        <tr><td>Land registry (NSW LRS)</td><td id="costReg">—</td></tr>
+        <tr><td>Miscellaneous (rates, etc.)</td><td id="costMisc">—</td></tr>
+        <tr><td>Total purchase costs</td><td id="costTotal">—</td></tr>
+        <tr id="costLmiRow"><td>Est. LMI <span style="font-weight:400;color:var(--muted)">(if LVR &gt; 80%)</span></td><td id="costLmi">—</td></tr>
+        <tr><td>Recommended buffer (after settlement)</td><td id="costBuffer">—</td></tr>
+        <tr><td><strong>Total savings to plan for</strong></td><td id="costSavingsTarget"><strong>—</strong></td></tr>
+      </table>
+    </div>
+
+    <div class="card" style="background: var(--bg); box-shadow: none; border-style: dashed;">
+      <h2 style="font-size: 1rem;">How these figures are calculated</h2>
+      <table class="cost-table" style="font-size: 0.85rem;">
+        <tr><td>Transfer duty (standard)</td><td>Revenue NSW 2025/26 marginal rates; premium duty above $3,721,000</td></tr>
+        <tr><td>FHB stamp duty concession</td><td>FHBAS: $0 up to $800k; sliding scale $800,001–$999,999 (official table from 1 Jul 2025)</td></tr>
+        <tr><td>5% Deposit Scheme</td><td>Min 5% of property value; NSW caps $1.5M (metro centres) / $800k (other) from 1 Oct 2025</td></tr>
+        <tr><td>LVR</td><td>Loan ÷ purchase price (lender may use valuation if different)</td></tr>
+        <tr><td>Monthly repayments</td><td>Standard P&amp;I amortisation; max 30-year term per scheme guidance</td></tr>
+        <tr><td>LMI estimate</td><td>Indicative % of loan by LVR band if above 80%; $0 under First Home Guarantee</td></tr>
+        <tr><td>Cash buffer</td><td>Adjustable; default is greater of $20,000 or 3× monthly repayment</td></tr>
+        <tr><td>Conveyancing estimate</td><td>NSW typical professional fees ~$1,300–$2,400 by price (industry guides 2025/26)</td></tr>
+        <tr><td>Search estimate</td><td>Disbursements ~$300–$650 by price (title, council, water, rates certificates)</td></tr>
+        <tr><td>Not included</td><td>LMI (waived if scheme applies), foreign buyer 9% surcharge, FHOG grant, PEXA (~$130+), building/pest reports, strata levies</td></tr>
+      </table>
+      <p class="fhbg-disclaimer" style="margin-top: 12px; margin-bottom: 0;">
+        Sources: <a href="https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/transfer-duty/understanding-transfer-duty/calculate-transfer-duty" target="_blank" rel="noopener">Revenue NSW transfer duty</a>,
+        <a href="https://www.nsw.gov.au/housing-and-construction/buying-and-selling-property/home-buying-assistance/first-home-buyers-assistance-scheme" target="_blank" rel="noopener">NSW FHBAS</a>,
+        <a href="https://firsthomebuyers.gov.au/australian-government-5-percent-deposit-scheme" target="_blank" rel="noopener">5% Deposit Scheme</a>,
+        <a href="https://www.nswlrs.com.au/" target="_blank" rel="noopener">NSW Land Registry Services</a>.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    let stampDutyManual = false;
+    let conveyancingManual = false;
+    let searchesManual = false;
+    let registryManual = false;
+    let bufferManual = false;
+
+    const DEFAULT_LEGAL = 1000;
+    const LRS_TRANSFER_REG = 352;
+    const LRS_MORTGAGE_REG = 176;
+
+    // NSW conveyancing professional fee tiers (indicative, ex-GST; purchases 2025/26)
+    function calcConveyancingFee(price) {
+      if (price <= 0) return 1500;
+      if (price <= 600000) return 1300;
+      if (price <= 800000) return 1500;
+      if (price <= 1000000) return 1700;
+      if (price <= 1500000) return 2000;
+      return 2400;
+    }
+
+    // Search disbursements: title, s10.7 planning, water, rates, etc. (ex-GST; scales with price)
+    function calcSearchDisbursements(price) {
+      if (price <= 0) return 0;
+      if (price <= 500000) return 300;
+      if (price <= 800000) return 380;
+      if (price <= 1000000) return 450;
+      if (price <= 1500000) return 550;
+      return 650;
+    }
+
+    function calcRegistryFees() {
+      return LRS_TRANSFER_REG + LRS_MORTGAGE_REG;
+    }
+
+    const FHBG_CAPS = {
+      metro: { label: 'Sydney / Newcastle / Illawarra / Lake Macquarie', cap: 1500000 },
+      regional: { label: 'Rest of NSW', cap: 800000 }
+    };
+
+    const FHBG_DEPOSIT_RATE = 0.05;
+    const BUFFER_MIN = 20000;
+    const BUFFER_MONTHS = 3;
+
+    // Indicative LMI midpoints by LVR band (varies by lender/insurer — get a formal quote)
+    function calcLmiEstimate(loan, lvr) {
+      if (loan <= 0 || lvr <= 0.8) return 0;
+      if (lvr <= 0.85) return Math.round(loan * 0.013);
+      if (lvr <= 0.90) return Math.round(loan * 0.022);
+      if (lvr <= 0.95) return Math.round(loan * 0.038);
+      return Math.round(loan * 0.048);
+    }
+
+    function calcRecommendedBuffer(monthlyPayment) {
+      if (monthlyPayment <= 0) return BUFFER_MIN;
+      return Math.max(BUFFER_MIN, Math.round(monthlyPayment * BUFFER_MONTHS));
+    }
+
+    function syncBuffer(monthlyPayment, autoOnly) {
+      const recommended = calcRecommendedBuffer(monthlyPayment);
+      if (autoOnly && bufferManual) return recommended;
+      document.getElementById('buffer').value = recommended;
+      document.getElementById('bufferSlider').value = recommended;
+      document.getElementById('bufferSlider').max = Math.max(150000, recommended * 2);
+      bufferManual = false;
+      document.getElementById('bufferAutoBadge').style.display = 'inline';
+      const hint = monthlyPayment > 0
+        ? `Default: ${fmt(BUFFER_MIN)} minimum or ${BUFFER_MONTHS}× monthly repayment (${fmtDec(monthlyPayment)} × ${BUFFER_MONTHS} = ${fmt(recommended)})`
+        : `Default: ${fmt(BUFFER_MIN)} minimum (set interest rate above for repayment-based estimate)`;
+      document.getElementById('bufferHint').textContent = hint;
+      return recommended;
+    }
+
+    const fmt = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+    const fmtDec = (n) => '$' + n.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const pct = (n) => (n * 100).toFixed(1) + '%';
+
+    function calcMonthlyPayment(principal, annualRatePct, years) {
+      if (principal <= 0 || years <= 0) return 0;
+      const r = annualRatePct / 100 / 12;
+      const n = years * 12;
+      if (r === 0) return principal / n;
+      return principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+    }
+
+    function calcAmortSchedule(principal, annualRatePct, years) {
+      const payment = calcMonthlyPayment(principal, annualRatePct, years);
+      const r = annualRatePct / 100 / 12;
+      const months = years * 12;
+      let balance = principal;
+      let totalInterest = 0;
+      const rows = [];
+
+      for (let m = 1; m <= months; m++) {
+        const interest = balance * r;
+        const principalPaid = Math.min(payment - interest, balance);
+        balance = Math.max(0, balance - principalPaid);
+        totalInterest += interest;
+        rows.push({ month: m, payment, interest, principal: principalPaid, balance });
+      }
+
+      return { payment, totalInterest, rows };
+    }
+
+    // NSW FHBAS concessional duty (transactions from 1 Jul 2025). Official table: $850k=$9,853 … $990k=$37,441.40
+    // Formula matches Revenue NSW published amounts; applies when dutiable value is under $1,000,000.
+    function calcNswFhbStampDuty(price) {
+      if (price <= 800000) return 0;
+      if (price < 1000000) return (price - 800000) / 200000 * 39412;
+      return calcNswTransferDuty(price);
+    }
+
+    // Revenue NSW general transfer duty 2025/26 (+ premium duty above $3,721,000)
+    function calcNswTransferDuty(price) {
+      if (price <= 17000) return Math.max(20, price * 0.0125);
+      if (price <= 37000) return 212 + (price - 17000) * 0.015;
+      if (price <= 99000) return 512 + (price - 37000) * 0.0175;
+      if (price <= 372000) return 1597 + (price - 99000) * 0.035;
+      if (price <= 1240000) return 11152 + (price - 372000) * 0.045;
+      if (price <= 3721000) return 50212 + (price - 1240000) * 0.055;
+      return 186667 + (price - 3721000) * 0.07;
+    }
+
+    function calcStampDuty(price, isFhb) {
+      if (isFhb) return calcNswFhbStampDuty(price);
+      return calcNswTransferDuty(price);
+    }
+
+    function getCalculatedStamp() {
+      const price = Math.max(0, Number(document.getElementById('price').value) || 0);
+      const isFhb = document.getElementById('fhb').checked;
+      return Math.round(calcStampDuty(price, isFhb));
+    }
+
+    function syncStampDuty(autoOnly) {
+      if (autoOnly && stampDutyManual) return;
+      document.getElementById('stamp').value = getCalculatedStamp();
+      stampDutyManual = false;
+      document.getElementById('stampAutoBadge').style.display = 'inline';
+    }
+
+    function syncEstimatedFees(autoOnly) {
+      const price = Math.max(0, Number(document.getElementById('price').value) || 0);
+      if (!autoOnly || !conveyancingManual) {
+        document.getElementById('conveyancing').value = calcConveyancingFee(price);
+        conveyancingManual = false;
+      }
+      if (!autoOnly || !searchesManual) {
+        document.getElementById('searches').value = calcSearchDisbursements(price);
+        searchesManual = false;
+      }
+      if (!autoOnly || !registryManual) {
+        document.getElementById('reg').value = calcRegistryFees();
+        registryManual = false;
+      }
+      const feesAuto = !(conveyancingManual || searchesManual || registryManual);
+      document.getElementById('feesAutoBadge').style.display = feesAuto ? 'inline' : 'none';
+    }
+
+    function resetAllFees() {
+      const price = Math.max(0, Number(document.getElementById('price').value) || 0);
+      document.getElementById('legal').value = DEFAULT_LEGAL;
+      conveyancingManual = false;
+      searchesManual = false;
+      registryManual = false;
+      document.getElementById('conveyancing').value = calcConveyancingFee(price);
+      document.getElementById('searches').value = calcSearchDisbursements(price);
+      document.getElementById('reg').value = calcRegistryFees();
+      document.getElementById('feesAutoBadge').style.display = 'inline';
+    }
+
+    function calc() {
+      const price = Math.max(0, Number(document.getElementById('price').value) || 0);
+      const cash = Math.max(0, Number(document.getElementById('cash').value) || 0);
+      const stamp = Math.max(0, Number(document.getElementById('stamp').value) || 0);
+      const legal = Math.max(0, Number(document.getElementById('legal').value) || 0);
+      const conveyancing = Math.max(0, Number(document.getElementById('conveyancing').value) || 0);
+      const searches = Math.max(0, Number(document.getElementById('searches').value) || 0);
+      const reg = Math.max(0, Number(document.getElementById('reg').value) || 0);
+      const misc = Math.max(0, Number(document.getElementById('misc').value) || 0);
+      const fixedFees = legal + conveyancing + searches + reg + misc;
+
+      const totalCosts = price + stamp + fixedFees;
+      const loan = Math.max(0, totalCosts - cash);
+      const lvr = price > 0 ? loan / price : 0;
+      const deposit = Math.max(0, price - loan);
+      const feesFromCash = Math.max(0, cash - deposit);
+
+      // Update stats
+      document.getElementById('statTotal').textContent = fmt(totalCosts);
+      document.getElementById('statCash').textContent = fmt(cash);
+      document.getElementById('statLoan').textContent = fmt(loan);
+
+      const lvrEl = document.getElementById('statLvr');
+      lvrEl.textContent = pct(lvr);
+      lvrEl.className = 'value lvr' + (lvr >= 0.85 ? ' danger' : lvr >= 0.8 ? ' warn' : '');
+
+      // Formula boxes
+      document.getElementById('formulaLoan').textContent = fmt(loan);
+      document.getElementById('formulaPrice').textContent = fmt(price);
+      document.getElementById('formulaLvr').textContent = pct(lvr);
+
+      // Plain english
+      const lvrRounded = Math.round(lvr * 100);
+      document.getElementById('plainEnglish').innerHTML =
+        `<strong>LVR (Loan-to-Value Ratio)</strong> tells the bank what percentage of the home's price you're borrowing. ` +
+        `You're borrowing <strong>${fmt(loan)}</strong> on a <strong>${fmt(price)}</strong> property — ` +
+        `that means the bank covers <strong>${lvrRounded}%</strong> of the home's value and you cover <strong>${100 - lvrRounded}%</strong> as your deposit. ` +
+        `Most lenders prefer LVR below <strong>80%</strong> to avoid extra insurance costs.`;
+
+      // Property bar (LVR visual)
+      const loanPctProp = price > 0 ? (loan / price) * 100 : 0;
+      const depPctProp = price > 0 ? Math.max(0, (deposit / price) * 100) : 0;
+      renderBar('propertyBar', [
+        { cls: 'loan', pct: Math.min(loanPctProp, 100), label: fmt(loan), minPct: 12 },
+        { cls: 'deposit', pct: Math.min(depPctProp, 100 - loanPctProp), label: fmt(deposit), minPct: 10 }
+      ], price, 'Property price');
+      document.getElementById('legLoanPct').textContent = pct(lvr);
+      document.getElementById('legDepositPct').textContent = price > 0 ? pct(deposit / price) : '—';
+
+      // Cash bar
+      const cashTotal = cash || 1;
+      renderBar('cashBar', [
+        { cls: 'deposit', pct: (deposit / cashTotal) * 100, label: fmt(deposit), minPct: 10 },
+        { cls: 'fees', pct: (feesFromCash / cashTotal) * 100, label: fmt(feesFromCash), minPct: 10 }
+      ], cash, 'Your cash');
+      document.getElementById('legDeposit').textContent = fmt(deposit);
+      document.getElementById('legFees').textContent = fmt(feesFromCash);
+
+      // Total costs bar
+      const tc = totalCosts || 1;
+      renderBar('totalBar', [
+        { cls: 'cash', pct: (cash / tc) * 100, label: fmt(cash), minPct: 10 },
+        { cls: 'loan', pct: (loan / tc) * 100, label: fmt(loan), minPct: 10 }
+      ], totalCosts, 'Total costs');
+      document.getElementById('legCashTotal').textContent = fmt(cash);
+      document.getElementById('legLoanTotal').textContent = fmt(loan);
+
+      // Cost table
+      document.getElementById('costPrice').textContent = fmt(price);
+      document.getElementById('costStamp').textContent = fmt(stamp);
+      document.getElementById('costLegal').textContent = fmt(legal);
+      document.getElementById('costConveyancing').textContent = fmt(conveyancing);
+      document.getElementById('costSearches').textContent = fmt(searches);
+      document.getElementById('costReg').textContent = fmt(reg);
+      document.getElementById('costMisc').textContent = fmt(misc);
+      document.getElementById('costTotal').textContent = fmt(totalCosts);
+
+      const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
+      const term = Math.max(1, Number(document.getElementById('term').value) || 30);
+      const monthlyPayment = loan > 0 && rate > 0 ? calcMonthlyPayment(loan, rate, term) : 0;
+      const recommendedBuffer = syncBuffer(monthlyPayment, true);
+      const buffer = Math.max(0, Number(document.getElementById('buffer').value) || 0);
+      const lmi = calcLmiEstimate(loan, lvr);
+      const savingsTarget = cash + lmi + buffer;
+
+      const lmiEl = document.getElementById('statLmi');
+      if (lvr <= 0.8) {
+        lmiEl.textContent = '$0';
+        lmiEl.className = 'value';
+      } else {
+        lmiEl.textContent = fmt(lmi);
+        lmiEl.className = 'value lmi';
+      }
+      document.getElementById('statBuffer').textContent = fmt(buffer);
+      document.getElementById('statSavingsTarget').textContent = fmt(savingsTarget);
+      document.getElementById('costLmi').textContent = lvr <= 0.8 ? 'Not required (LVR ≤ 80%)' : fmt(lmi);
+      document.getElementById('costBuffer').textContent = fmt(buffer);
+      document.getElementById('costSavingsTarget').textContent = fmt(savingsTarget);
+      document.getElementById('costLmiRow').style.display = lvr <= 0.8 ? 'none' : '';
+
+      const bufferNote = buffer !== recommendedBuffer
+        ? `your chosen buffer of <strong>${fmt(buffer)}</strong> (recommended was ${fmt(recommendedBuffer)})`
+        : `a <strong>${fmt(buffer)}</strong> buffer (recommended: ${fmt(recommendedBuffer)})`;
+      document.getElementById('lmiBufferNote').innerHTML =
+        lvr <= 0.8
+          ? `<strong>No LMI</strong> at ${pct(lvr)} LVR. Still plan for ${bufferNote} after settlement — on top of your <strong>${fmt(cash)}</strong> purchase cash. ` +
+            `Aim to hold around <strong>${fmt(savingsTarget)}</strong> in total savings. Under the <strong>First Home Guarantee</strong> (above), LMI is typically waived at ~95% LVR.`
+          : `<strong>LMI ~${fmt(lmi)}</strong> is typical when LVR is ${pct(lvr)} (indicative only — your lender will quote exactly). ` +
+            `It is often added to the loan rather than paid upfront. ` +
+            `Plus ${bufferNote}. ` +
+            `Plan for roughly <strong>${fmt(savingsTarget)}</strong> total: ${fmt(cash)} purchase cash + ${fmt(lmi)} LMI if paid upfront + ${fmt(buffer)} buffer.`;
+
+      // Alerts
+      const alert = document.getElementById('alertBox');
+      alert.className = 'alert show';
+      if (cash > totalCosts) {
+        alert.className += ' info';
+        alert.textContent = `Your cash (${fmt(cash)}) exceeds total costs (${fmt(totalCosts)}). You wouldn't need to borrow anything.`;
+      } else if (lvr > 0.8) {
+        alert.className += ' warn';
+        alert.textContent = `Your LVR is ${pct(lvr)} — above 80%. Estimated LMI ~${fmt(lmi)}. Plan ~${fmt(savingsTarget)} total savings (purchase cash + buffer${lmi > 0 ? ', or LMI if paid upfront' : ''}). Consider the First Home Guarantee above to avoid LMI.`;
+      } else {
+        alert.className += ' info';
+        alert.textContent = `Your LVR is ${pct(lvr)} — at or below 80%, so no LMI. Still aim for ~${fmt(savingsTarget)} total savings including a ${fmt(buffer)} buffer after settlement.`;
+      }
+
+      // Sync sliders
+      document.getElementById('priceSlider').value = price;
+      document.getElementById('cashSlider').max = Math.max(500000, Math.round(totalCosts));
+      document.getElementById('cashSlider').value = cash;
+
+      updateRepayments(loan);
+      calcFhbg(price, legal, conveyancing, searches, reg, misc);
+    }
+
+    function calcFhbg(price, legal, conveyancing, searches, reg, misc) {
+      const location = document.getElementById('fhbgLocation').value;
+      const { label: locationLabel, cap } = FHBG_CAPS[location];
+
+      const stamp = calcNswFhbStampDuty(price);
+      const deposit5 = price * FHBG_DEPOSIT_RATE;
+      const otherFees = legal + conveyancing + searches + reg + misc;
+      const stampFull = calcNswTransferDuty(price);
+      const stampSaving = Math.max(0, stampFull - stamp);
+      const totalCash = deposit5 + stamp + otherFees;
+      const totalCosts = price + stamp + otherFees;
+      const loan = Math.max(0, totalCosts - totalCash);
+      const lvr = price > 0 ? loan / price : 0;
+      const withinCap = price > 0 && price <= cap;
+      const withinStampConcession = price > 0 && price < 1000000;
+
+      document.getElementById('fhbgDeposit').textContent = fmt(deposit5);
+      document.getElementById('fhbgStamp').textContent = fmt(stamp);
+      document.getElementById('fhbgFees').textContent = fmt(otherFees);
+      document.getElementById('fhbgCashTotal').textContent = fmt(totalCash);
+      document.getElementById('fhbgLoan').textContent = fmt(loan);
+      document.getElementById('fhbgLvr').textContent = pct(lvr);
+
+      document.getElementById('fhbgCostPrice').textContent = fmt(price);
+      document.getElementById('fhbgCostDeposit').textContent = fmt(deposit5);
+      document.getElementById('fhbgCostStamp').textContent = fmt(stamp);
+      document.getElementById('fhbgCostStampFull').textContent = fmt(stampFull);
+      document.getElementById('fhbgCostStampSaving').textContent = stampSaving > 0 ? fmt(stampSaving) : '$0';
+      document.getElementById('fhbgCostLegal').textContent = fmt(legal);
+      document.getElementById('fhbgCostConveyancing').textContent = fmt(conveyancing);
+      document.getElementById('fhbgCostSearches').textContent = fmt(searches);
+      document.getElementById('fhbgCostReg').textContent = fmt(reg);
+      document.getElementById('fhbgCostMisc').textContent = fmt(misc);
+      document.getElementById('fhbgCostCashTotal').textContent = fmt(totalCash);
+      document.getElementById('fhbgCostLoan').textContent = fmt(loan);
+      document.getElementById('fhbgCostCap').textContent = fmt(cap) + ' (' + locationLabel + ')';
+
+      const cashTotal = totalCash || 1;
+      renderBar('fhbgCashBar', [
+        { cls: 'deposit', pct: (deposit5 / cashTotal) * 100, label: fmt(deposit5), minPct: 12 },
+        { cls: 'fees', pct: ((stamp + otherFees) / cashTotal) * 100, label: fmt(stamp + otherFees), minPct: 12 }
+      ], totalCash, 'Total cash upfront');
+
+      document.getElementById('fhbgLegDeposit').textContent = fmt(deposit5) + ' (5% of ' + fmt(price) + ')';
+      document.getElementById('fhbgLegCosts').textContent = fmt(stamp + otherFees);
+
+      let plain = '';
+      if (price <= 0) {
+        plain = 'Enter a purchase price above to see First Home Guarantee estimates.';
+      } else if (!withinCap) {
+        plain = `At <strong>${fmt(price)}</strong>, this property is <strong>above the ${fmt(cap)} cap</strong> for ${locationLabel} under the First Home Guarantee. You may not qualify for the 5% scheme in this area — check with a participating lender.`;
+      } else {
+        plain = `Under the <strong>First Home Guarantee</strong>, your minimum deposit is <strong>5%</strong> of the purchase price = <strong>${fmt(deposit5)}</strong>. ` +
+          `With NSW first home buyer stamp duty concessions, you'd pay <strong>${fmt(stamp)}</strong> stamp duty` +
+          (stampSaving > 0 ? ` (saving about <strong>${fmt(stampSaving)}</strong> vs full duty)` : '') +
+          ` plus <strong>${fmt(otherFees)}</strong> in legal and other fees. ` +
+          `Total cash upfront ≈ <strong>${fmt(totalCash)}</strong>, with a loan of about <strong>${fmt(loan)}</strong> (<strong>${pct(lvr)}</strong> LVR) and <strong>no LMI</strong> if the government guarantee applies.`;
+      }
+      document.getElementById('fhbgPlainEnglish').innerHTML = plain;
+
+      const fhbgAlert = document.getElementById('fhbgAlert');
+      fhbgAlert.className = 'alert show';
+      if (price <= 0) {
+        fhbgAlert.className = 'alert';
+        fhbgAlert.textContent = '';
+      } else if (!withinCap) {
+        fhbgAlert.className += ' danger';
+        fhbgAlert.textContent = `Purchase price exceeds the ${fmt(cap)} First Home Guarantee cap for ${locationLabel}. Consider a lower price or a different area, or speak to your lender about other options.`;
+      } else if (price >= 1000000) {
+        fhbgAlert.className += ' warn';
+        fhbgAlert.textContent = `At $1,000,000 or above there is no NSW FHBAS stamp duty concession — full transfer duty applies (${fmt(stamp)}). The 5% deposit scheme may still apply if within the ${fmt(cap)} price cap.`;
+      } else if (price <= 800000) {
+        fhbgAlert.className += ' info';
+        fhbgAlert.textContent = `Full NSW stamp duty exemption applies (up to $800,000). Property is within the ${fmt(cap)} First Home Guarantee cap.`;
+      } else {
+        fhbgAlert.className += ' info';
+        fhbgAlert.textContent = `Concessional NSW stamp duty applies ($800,001–$999,999). Property is within the ${fmt(cap)} First Home Guarantee cap.`;
+      }
+
+      const pill = document.getElementById('fhbgSchemePill');
+      if (withinCap && price > 0) {
+        pill.style.display = 'inline-flex';
+        pill.style.background = '#dcfce7';
+        pill.style.color = '#166534';
+        pill.textContent = '✓ No LMI with government guarantee (if eligible) — 5% deposit on property';
+      } else if (price > 0) {
+        pill.style.display = 'inline-flex';
+        pill.style.background = '#fee2e2';
+        pill.style.color = '#991b1b';
+        pill.textContent = 'Price cap exceeded — confirm eligibility with a participating lender';
+      } else {
+        pill.style.display = 'none';
+      }
+
+      renderLoanRepayments(loan, {
+        statRepayment: 'fhbgStatRepayment',
+        statTotalInterest: 'fhbgStatTotalInterest',
+        statTotalRepaid: 'fhbgStatTotalRepaid',
+        plainEnglish: 'fhbgRepayPlainEnglish',
+        firstPaymentBar: 'fhbgFirstPaymentBar',
+        legFirstInterest: 'fhbgLegFirstInterest',
+        legFirstPrincipal: 'fhbgLegFirstPrincipal',
+        repaySchedule: 'fhbgRepaySchedule',
+        scheme: true,
+        withinCap
+      });
+    }
+
+    function renderLoanRepayments(loan, ui) {
+      const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
+      const term = Math.max(1, Number(document.getElementById('term').value) || 30);
+      const el = (id) => document.getElementById(ui[id] || id);
+
+      if (loan <= 0 || rate <= 0) {
+        el('statRepayment').textContent = loan <= 0 ? '$0' : '—';
+        el('statTotalInterest').textContent = '—';
+        el('statTotalRepaid').textContent = '—';
+        el('plainEnglish').textContent = loan <= 0
+          ? (ui.scheme
+            ? 'No loan required under this scenario.'
+            : 'No loan needed — you have enough cash to cover all purchase costs.')
+          : 'Enter an interest rate to see repayment estimates.';
+        if (ui.firstPaymentBar) {
+          const barEl = document.getElementById(ui.firstPaymentBar);
+          if (barEl) barEl.innerHTML = '';
+        }
+        if (ui.repaySchedule) el('repaySchedule').innerHTML = '';
+        return;
+      }
+
+      const { payment, totalInterest, rows } = calcAmortSchedule(loan, rate, term);
+      const first = rows[0];
+      const month12 = rows[11] || first;
+      const month60 = rows[59] || rows[rows.length - 1];
+      const last = rows[rows.length - 1];
+
+      el('statRepayment').textContent = fmtDec(payment);
+      el('statTotalInterest').textContent = fmtDec(totalInterest);
+      el('statTotalRepaid').textContent = fmtDec(totalInterest + loan);
+
+      const firstIntPct = Math.round((first.interest / payment) * 100);
+      if (ui.scheme) {
+        const capNote = ui.withinCap === false
+          ? ' Repayments shown for illustration only — property may exceed scheme price cap.'
+          : ' With the First Home Guarantee, you avoid LMI despite borrowing at ~95% LVR.';
+        el('plainEnglish').innerHTML =
+          `On your <strong>scheme loan of ${fmt(loan)}</strong> at <strong>${rate.toFixed(2)}%</strong> over <strong>${term} years</strong>, ` +
+          `expect about <strong>${fmtDec(payment)} per month</strong> (principal &amp; interest).` +
+          ` First month: <strong>${fmtDec(first.interest)}</strong> interest, <strong>${fmtDec(first.principal)}</strong> principal.` +
+          ` Total interest over ${term} years ≈ <strong>${fmtDec(totalInterest)}</strong>.${capNote}`;
+      } else {
+        el('plainEnglish').innerHTML =
+          `At <strong>${rate.toFixed(2)}%</strong> over <strong>${term} years</strong>, you'd pay about ` +
+          `<strong>${fmtDec(payment)} per month</strong>. ` +
+          `In your first month, roughly <strong>${firstIntPct}%</strong> (${fmtDec(first.interest)}) goes to ` +
+          `<strong>interest</strong> and <strong>${100 - firstIntPct}%</strong> (${fmtDec(first.principal)}) pays off the loan. ` +
+          `Over the full ${term} years, you'd pay about <strong>${fmtDec(totalInterest)}</strong> in total interest on top of the ${fmt(loan)} borrowed.`;
+      }
+
+      if (ui.firstPaymentBar) {
+        const payTotal = payment || 1;
+        renderBar(ui.firstPaymentBar, [
+          { cls: 'interest', pct: (first.interest / payTotal) * 100, label: fmtDec(first.interest), minPct: 15 },
+          { cls: 'principal-pay', pct: (first.principal / payTotal) * 100, label: fmtDec(first.principal), minPct: 15 }
+        ], payment, 'Monthly payment', fmtDec);
+        el('legFirstInterest').textContent = fmtDec(first.interest) + ' (' + pct(first.interest / payment) + ')';
+        el('legFirstPrincipal').textContent = fmtDec(first.principal) + ' (' + pct(first.principal / payment) + ')';
+      }
+
+      if (ui.repaySchedule) {
+        const milestones = [
+          { label: 'Month 1', row: first },
+          { label: 'Month 12 (Year 1)', row: month12 },
+          { label: 'Month 60 (Year 5)', row: month60 },
+          { label: `Month ${rows.length} (final)`, row: last }
+        ];
+        el('repaySchedule').innerHTML = milestones.map(({ label, row }) =>
+          `<tr>
+            <td>${label}</td>
+            <td>${fmtDec(row.payment)}</td>
+            <td class="interest-cell">${fmtDec(row.interest)}</td>
+            <td class="principal-cell">${fmtDec(row.principal)}</td>
+            <td>${fmtDec(row.balance)}</td>
+          </tr>`
+        ).join('');
+      }
+
+      if (!ui.scheme) {
+        document.getElementById('rateSlider').value = rate;
+        document.getElementById('termSlider').value = term;
+      }
+    }
+
+    function updateRepayments(loan) {
+      renderLoanRepayments(loan, {
+        statRepayment: 'statRepayment',
+        statTotalInterest: 'statTotalInterest',
+        statTotalRepaid: 'statTotalRepaid',
+        plainEnglish: 'repayPlainEnglish',
+        firstPaymentBar: 'firstPaymentBar',
+        legFirstInterest: 'legFirstInterest',
+        legFirstPrincipal: 'legFirstPrincipal',
+        repaySchedule: 'repaySchedule'
+      });
+    }
+
+    function buildBar(segments) {
+      return segments
+        .filter(s => s.pct > 0.3)
+        .map(s => {
+          const showLabel = s.pct >= s.minPct;
+          return `<div class="bar-segment ${s.cls}${showLabel ? '' : ' small-text'}" style="width:${s.pct}%">${showLabel ? s.label : ''}</div>`;
+        })
+        .join('');
+    }
+
+    function renderBar(containerId, segments, total, totalLabel, formatFn = fmt) {
+      document.getElementById(containerId).innerHTML = `
+        <div class="bar-total">
+          <span>${totalLabel}</span>
+          <strong>${formatFn(total)}</strong>
+        </div>
+        <div class="bar-wrap">${buildBar(segments)}</div>
+      `;
+    }
+
+    function syncFromSlider(source) {
+      if (source === 'price') {
+        document.getElementById('price').value = document.getElementById('priceSlider').value;
+        syncStampDuty(true);
+        syncEstimatedFees(true);
+      } else {
+        document.getElementById('cash').value = document.getElementById('cashSlider').value;
+      }
+      calc();
+    }
+
+    // Event listeners
+    ['price', 'cash'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        if (id === 'price') {
+          syncStampDuty(true);
+          syncEstimatedFees(true);
+        }
+        calc();
+      });
+    });
+    ['rate', 'term', 'legal', 'misc'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calc);
+    });
+    document.getElementById('conveyancing').addEventListener('input', () => {
+      conveyancingManual = true;
+      document.getElementById('feesAutoBadge').style.display = 'none';
+      calc();
+    });
+    document.getElementById('searches').addEventListener('input', () => {
+      searchesManual = true;
+      document.getElementById('feesAutoBadge').style.display = 'none';
+      calc();
+    });
+    document.getElementById('reg').addEventListener('input', () => {
+      registryManual = true;
+      document.getElementById('feesAutoBadge').style.display = 'none';
+      calc();
+    });
+    document.getElementById('stamp').addEventListener('input', () => {
+      stampDutyManual = true;
+      document.getElementById('stampAutoBadge').style.display = 'none';
+      calc();
+    });
+    document.getElementById('resetStamp').addEventListener('click', () => {
+      syncStampDuty(false);
+      calc();
+    });
+    document.getElementById('resetFees').addEventListener('click', () => {
+      resetAllFees();
+      calc();
+    });
+    document.getElementById('buffer').addEventListener('input', () => {
+      bufferManual = true;
+      document.getElementById('bufferAutoBadge').style.display = 'none';
+      document.getElementById('bufferSlider').value = document.getElementById('buffer').value;
+      calc();
+    });
+    document.getElementById('bufferSlider').addEventListener('input', () => {
+      bufferManual = true;
+      document.getElementById('bufferAutoBadge').style.display = 'none';
+      document.getElementById('buffer').value = document.getElementById('bufferSlider').value;
+      calc();
+    });
+    document.getElementById('resetBuffer').addEventListener('click', () => {
+      const price = Math.max(0, Number(document.getElementById('price').value) || 0);
+      const cash = Math.max(0, Number(document.getElementById('cash').value) || 0);
+      const stamp = Math.max(0, Number(document.getElementById('stamp').value) || 0);
+      const fixedFees = ['legal', 'conveyancing', 'searches', 'reg', 'misc'].reduce((s, id) =>
+        s + Math.max(0, Number(document.getElementById(id).value) || 0), 0);
+      const totalCosts = price + stamp + fixedFees;
+      const loanAmt = Math.max(0, totalCosts - cash);
+      const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
+      const term = Math.max(1, Number(document.getElementById('term').value) || 30);
+      const monthlyPayment = loanAmt > 0 && rate > 0 ? calcMonthlyPayment(loanAmt, rate, term) : 0;
+      syncBuffer(monthlyPayment, false);
+      calc();
+    });
+    document.getElementById('priceSlider').addEventListener('input', () => syncFromSlider('price'));
+    document.getElementById('cashSlider').addEventListener('input', () => syncFromSlider('cash'));
+    document.getElementById('rateSlider').addEventListener('input', () => {
+      document.getElementById('rate').value = document.getElementById('rateSlider').value;
+      calc();
+    });
+    document.getElementById('termSlider').addEventListener('input', () => {
+      document.getElementById('term').value = document.getElementById('termSlider').value;
+      calc();
+    });
+    document.getElementById('fhb').addEventListener('change', () => {
+      document.getElementById('fhbLabel').textContent = document.getElementById('fhb').checked
+        ? 'Yes — stamp duty concessions apply'
+        : 'No — full stamp duty applies';
+      syncStampDuty(true);
+      calc();
+    });
+    document.getElementById('fhbgLocation').addEventListener('change', calc);
+
+    document.querySelectorAll('.preset-btns button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.preset-btns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('price').value = btn.dataset.price;
+        document.getElementById('cash').value = btn.dataset.cash;
+        syncStampDuty(true);
+        syncEstimatedFees(true);
+        calc();
+      });
+    });
+
+    syncStampDuty(false);
+    syncEstimatedFees(false);
+    calc();
+  </script>
+</body>
+</html>
