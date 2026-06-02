@@ -1653,6 +1653,15 @@
       `;
     }
 
+    function syncPresetButtons() {
+      const price = Number(document.getElementById('price').value) || 0;
+      const cash = Number(document.getElementById('cash').value) || 0;
+      document.querySelectorAll('.preset-btns button').forEach(btn => {
+        const isMatch = Number(btn.dataset.price) === price && Number(btn.dataset.cash) === cash;
+        btn.classList.toggle('active', isMatch);
+      });
+    }
+
     function syncFromSlider(source) {
       if (source === 'price') {
         document.getElementById('price').value = document.getElementById('priceSlider').value;
@@ -1661,6 +1670,7 @@
       } else {
         document.getElementById('cash').value = document.getElementById('cashSlider').value;
       }
+      syncPresetButtons();
       calc();
     }
 
@@ -1671,6 +1681,7 @@
           syncStampDuty(true);
           syncEstimatedFees(true);
         }
+        syncPresetButtons();
         calc();
       });
     });
@@ -1750,10 +1761,9 @@
 
     document.querySelectorAll('.preset-btns button').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.preset-btns button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
         document.getElementById('price').value = btn.dataset.price;
         document.getElementById('cash').value = btn.dataset.cash;
+        syncPresetButtons();
         syncStampDuty(true);
         syncEstimatedFees(true);
         calc();
