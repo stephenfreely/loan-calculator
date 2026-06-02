@@ -631,6 +631,96 @@
     }
 
     .extras-note strong { color: var(--text); }
+
+    .results-tabs-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .tab-list {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border);
+      background: var(--bg);
+      padding: 0 8px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 650;
+      padding: 16px 20px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+      background: var(--surface);
+      border-bottom-color: var(--loan);
+    }
+
+    .tab-btn[data-tab="fhbg"].active {
+      border-bottom-color: #22c55e;
+      color: #166534;
+    }
+
+    .tab-panel {
+      display: none;
+      padding: 24px;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .tab-panel.fhbg-panel {
+      border-color: #a7d4b8;
+      background: linear-gradient(180deg, #f8fdf9 0%, var(--surface) 120px);
+    }
+
+    .tab-panel .card-inner-title {
+      font-size: 1.1rem;
+      font-weight: 650;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-panel .card-inner-title .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: var(--loan-light);
+      color: var(--loan);
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .tab-panel.fhbg-panel .card-inner-title .badge {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    @media (max-width: 640px) {
+      .tab-btn {
+        font-size: 0.82rem;
+        padding: 14px 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -683,6 +773,29 @@
         <button data-price="900000" data-cash="213384" class="active">$900k / 79% LVR</button>
         <button data-price="1000000" data-cash="254090">$1M / 79% LVR</button>
         <button data-price="900000" data-cash="240000">$900k / $240k cash</button>
+      </div>
+
+      <div class="subsection">
+        <h3>Loan assumptions</h3>
+        <p class="sub-desc">Used for repayment estimates in both tabs below.</p>
+        <div class="inputs-grid">
+          <div class="field">
+            <label for="rate">Interest rate</label>
+            <div class="input-row">
+              <input type="number" id="rate" value="6.30" step="0.05" min="0" max="20">
+              <span class="suffix">% p.a.</span>
+            </div>
+            <input type="range" id="rateSlider" min="3" max="12" step="0.05" value="6.30">
+          </div>
+          <div class="field">
+            <label for="term">Loan term</label>
+            <div class="input-row">
+              <input type="number" id="term" value="30" step="1" min="1" max="40">
+              <span class="suffix">years</span>
+            </div>
+            <input type="range" id="termSlider" min="5" max="30" step="1" value="30">
+          </div>
+        </div>
       </div>
 
       <div class="subsection">
@@ -741,325 +854,311 @@
       </div>
     </div>
 
-    <!-- First Home Guarantee NSW -->
-    <div class="card fhbg-card">
-      <h2>First Home Guarantee <span class="badge">NSW · 5% deposit</span></h2>
-      <p class="fhbg-disclaimer">
-        Estimates for the Australian Government <strong>First Home Guarantee</strong> (5% Deposit Scheme, expanded Oct 2025)
-        combined with NSW <strong>First Home Buyers Assistance Scheme</strong> stamp duty concessions.
-        Uses your purchase price and fee inputs above. Scheme does not pay stamp duty or legal costs — you need extra cash for those.
-        <a href="https://www.housingaustralia.gov.au/first-home-guarantee-faqs" target="_blank" rel="noopener">Housing Australia</a> ·
-        <a href="https://www.revenue.nsw.gov.au/grants-schemes/assistance-scheme" target="_blank" rel="noopener">Revenue NSW</a>
-      </p>
-
-      <div class="field" style="margin-bottom: 20px;">
-        <label for="fhbgLocation">NSW location (scheme price cap)</label>
-        <p class="hint">From 1 Oct 2025: metro/major regional cap $1.5M; rest of NSW $800k</p>
-        <select id="fhbgLocation">
-          <option value="metro" selected>Sydney, Newcastle, Illawarra &amp; Lake Macquarie — up to $1,500,000</option>
-          <option value="regional">Rest of NSW — up to $800,000</option>
-        </select>
+    <!-- Results tabs -->
+    <div class="card results-tabs-card">
+      <div class="tab-list" role="tablist" aria-label="Calculator results">
+        <button type="button" class="tab-btn active" role="tab" id="tab-btn-fhbg" data-tab="fhbg" aria-selected="true" aria-controls="tab-fhbg">First Home Guarantee</button>
+        <button type="button" class="tab-btn" role="tab" id="tab-btn-glance" data-tab="glance" aria-selected="false" aria-controls="tab-glance">Standard structured loan</button>
       </div>
 
-      <div id="fhbgAlert" class="alert"></div>
+      <!-- First Home Guarantee tab -->
+      <div class="tab-panel fhbg-panel active" id="tab-fhbg" role="tabpanel" aria-labelledby="tab-btn-fhbg">
+        <h2 class="card-inner-title">First Home Guarantee <span class="badge">NSW · 5% deposit</span></h2>
+        <p class="fhbg-disclaimer">
+          Estimates for the Australian Government <strong>First Home Guarantee</strong> (5% Deposit Scheme, expanded Oct 2025)
+          combined with NSW <strong>First Home Buyers Assistance Scheme</strong> stamp duty concessions.
+          Uses your purchase price and fee inputs above. Scheme does not pay stamp duty or legal costs — you need extra cash for those.
+          <a href="https://www.housingaustralia.gov.au/first-home-guarantee-faqs" target="_blank" rel="noopener">Housing Australia</a> ·
+          <a href="https://www.revenue.nsw.gov.au/grants-schemes/assistance-scheme" target="_blank" rel="noopener">Revenue NSW</a>
+        </p>
 
-      <div class="stats fhbg-stats">
-        <div class="stat">
-          <div class="label">5% deposit (scheme minimum)</div>
-          <div class="value cash" id="fhbgDeposit">—</div>
+        <div class="field" style="margin-bottom: 20px;">
+          <label for="fhbgLocation">NSW location (scheme price cap)</label>
+          <p class="hint">From 1 Oct 2025: metro/major regional cap $1.5M; rest of NSW $800k</p>
+          <select id="fhbgLocation">
+            <option value="metro" selected>Sydney, Newcastle, Illawarra &amp; Lake Macquarie — up to $1,500,000</option>
+            <option value="regional">Rest of NSW — up to $800,000</option>
+          </select>
         </div>
-        <div class="stat">
-          <div class="label" id="fhbgStampLabel">Stamp duty (NSW FHB concession)</div>
-          <div class="value" id="fhbgStamp" style="color:var(--fees)">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">Legal &amp; other fees</div>
-          <div class="value" id="fhbgFees">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">Total cash upfront</div>
-          <div class="value cash" id="fhbgCashTotal">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">Loan amount</div>
-          <div class="value loan" id="fhbgLoan">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">LVR (property)</div>
-          <div class="value" id="fhbgLvr">—</div>
-        </div>
-      </div>
 
-      <div class="plain-english" id="fhbgPlainEnglish" style="margin: 20px 0; background:#dcfce7; border-color:#22c55e;"></div>
-
-      <div class="visual-block">
-        <div class="visual-title">Your upfront cash under the 5% scheme</div>
-        <div class="visual-subtitle">5% deposit on the property price, plus stamp duty and fees paid separately</div>
-        <div class="bar-container" id="fhbgCashBar"></div>
-        <div class="bar-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> 5% deposit — <strong id="fhbgLegDeposit">—</strong></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--fees)"></div> Stamp duty &amp; fees — <strong id="fhbgLegCosts">—</strong></div>
-        </div>
-      </div>
-
-      <table class="cost-table">
-        <tr><td>Purchase price</td><td id="fhbgCostPrice">—</td></tr>
-        <tr><td>5% deposit (First Home Guarantee minimum)</td><td id="fhbgCostDeposit">—</td></tr>
-        <tr><td id="fhbgCostStampLabel">Stamp duty — NSW FHB concession</td><td id="fhbgCostStamp">—</td></tr>
-        <tr class="savings-row" id="fhbgCostStampFullRow"><td>Stamp duty without concession (estimate)</td><td id="fhbgCostStampFull">—</td></tr>
-        <tr class="savings-row" id="fhbgCostStampSavingRow"><td>Stamp duty saving</td><td id="fhbgCostStampSaving">—</td></tr>
-        <tr><td>Legal fees</td><td id="fhbgCostLegal">—</td></tr>
-        <tr><td>Conveyancing fees</td><td id="fhbgCostConveyancing">—</td></tr>
-        <tr><td>Searches &amp; certificates</td><td id="fhbgCostSearches">—</td></tr>
-        <tr><td>Land registry (NSW LRS)</td><td id="fhbgCostReg">—</td></tr>
-        <tr><td>Miscellaneous</td><td id="fhbgCostMisc">—</td></tr>
-        <tr><td>Total cash you need upfront</td><td id="fhbgCostCashTotal">—</td></tr>
-        <tr><td>Loan amount (approx.)</td><td id="fhbgCostLoan">—</td></tr>
-        <tr><td>Scheme price cap (your area)</td><td id="fhbgCostCap">—</td></tr>
-      </table>
-
-      <div class="subsection">
-        <h3>Monthly repayments <span class="auto-badge">Scheme loan</span></h3>
-        <p class="sub-desc">Principal &amp; interest on the 5% scheme loan above (also updates your custom scenario below).</p>
-
-        <div class="inputs-grid" style="margin-bottom: 16px;">
-          <div class="field">
-            <label for="rate">Interest rate</label>
-            <div class="input-row">
-              <input type="number" id="rate" value="6.30" step="0.05" min="0" max="20">
-              <span class="suffix">% p.a.</span>
-            </div>
-            <input type="range" id="rateSlider" min="3" max="12" step="0.05" value="6.30">
-          </div>
-          <div class="field">
-            <label for="term">Loan term</label>
-            <div class="input-row">
-              <input type="number" id="term" value="30" step="1" min="1" max="40">
-              <span class="suffix">years</span>
-            </div>
-            <input type="range" id="termSlider" min="5" max="30" step="1" value="30">
-          </div>
-        </div>
+        <div id="fhbgAlert" class="alert"></div>
 
         <div class="stats fhbg-stats">
           <div class="stat">
-            <div class="label">Monthly repayment</div>
-            <div class="value repay" id="fhbgStatRepayment">—</div>
+            <div class="label">5% deposit (scheme minimum)</div>
+            <div class="value cash" id="fhbgDeposit">—</div>
           </div>
           <div class="stat">
-            <div class="label">Total interest (life of loan)</div>
-            <div class="value" id="fhbgStatTotalInterest" style="color:var(--interest)">—</div>
+            <div class="label" id="fhbgStampLabel">Stamp duty (NSW FHB concession)</div>
+            <div class="value" id="fhbgStamp" style="color:var(--fees)">—</div>
           </div>
           <div class="stat">
-            <div class="label">Total repaid</div>
-            <div class="value" id="fhbgStatTotalRepaid">—</div>
+            <div class="label">Legal &amp; other fees</div>
+            <div class="value" id="fhbgFees">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Total cash upfront</div>
+            <div class="value cash" id="fhbgCashTotal">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">Loan amount</div>
+            <div class="value loan" id="fhbgLoan">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">LVR (property)</div>
+            <div class="value" id="fhbgLvr">—</div>
           </div>
         </div>
 
-        <div class="plain-english" id="fhbgRepayPlainEnglish" style="margin-top: 16px; background: var(--interest-light); border-color: var(--interest);"></div>
+        <div class="plain-english" id="fhbgPlainEnglish" style="margin: 20px 0; background:#dcfce7; border-color:#22c55e;"></div>
 
-        <div class="visual-block" style="margin-top: 20px;">
-          <div class="visual-title">First monthly payment (scheme loan)</div>
-          <div class="visual-subtitle">Interest vs principal — same payment each month, split changes over time</div>
-          <div class="bar-container" id="fhbgFirstPaymentBar"></div>
+        <div class="visual-block">
+          <div class="visual-title">Your upfront cash under the 5% scheme</div>
+          <div class="visual-subtitle">5% deposit on the property price, plus stamp duty and fees paid separately</div>
+          <div class="bar-container" id="fhbgCashBar"></div>
           <div class="bar-legend">
-            <div class="legend-item"><div class="legend-dot" style="background:var(--interest)"></div> Interest — <strong id="fhbgLegFirstInterest">—</strong></div>
-            <div class="legend-item"><div class="legend-dot" style="background:var(--principal-pay)"></div> Principal — <strong id="fhbgLegFirstPrincipal">—</strong></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> 5% deposit — <strong id="fhbgLegDeposit">—</strong></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--fees)"></div> Stamp duty &amp; fees — <strong id="fhbgLegCosts">—</strong></div>
           </div>
         </div>
 
-        <table class="repay-table">
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>Monthly payment</th>
-              <th>Interest</th>
-              <th>Principal</th>
-              <th>Loan remaining</th>
-            </tr>
-          </thead>
-          <tbody id="fhbgRepaySchedule"></tbody>
+        <table class="cost-table">
+          <tr><td>Purchase price</td><td id="fhbgCostPrice">—</td></tr>
+          <tr><td>5% deposit (First Home Guarantee minimum)</td><td id="fhbgCostDeposit">—</td></tr>
+          <tr><td id="fhbgCostStampLabel">Stamp duty — NSW FHB concession</td><td id="fhbgCostStamp">—</td></tr>
+          <tr class="savings-row" id="fhbgCostStampFullRow"><td>Stamp duty without concession (estimate)</td><td id="fhbgCostStampFull">—</td></tr>
+          <tr class="savings-row" id="fhbgCostStampSavingRow"><td>Stamp duty saving</td><td id="fhbgCostStampSaving">—</td></tr>
+          <tr><td>Legal fees</td><td id="fhbgCostLegal">—</td></tr>
+          <tr><td>Conveyancing fees</td><td id="fhbgCostConveyancing">—</td></tr>
+          <tr><td>Searches &amp; certificates</td><td id="fhbgCostSearches">—</td></tr>
+          <tr><td>Land registry (NSW LRS)</td><td id="fhbgCostReg">—</td></tr>
+          <tr><td>Miscellaneous</td><td id="fhbgCostMisc">—</td></tr>
+          <tr><td>Total cash you need upfront</td><td id="fhbgCostCashTotal">—</td></tr>
+          <tr><td>Loan amount (approx.)</td><td id="fhbgCostLoan">—</td></tr>
+          <tr><td>Scheme price cap (your area)</td><td id="fhbgCostCap">—</td></tr>
         </table>
+
+        <div class="subsection">
+          <h3>Monthly repayments <span class="auto-badge">Scheme loan</span></h3>
+          <p class="sub-desc">Principal &amp; interest on the 5% scheme loan above.</p>
+
+          <div class="stats fhbg-stats">
+            <div class="stat">
+              <div class="label">Monthly repayment</div>
+              <div class="value repay" id="fhbgStatRepayment">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Total interest (life of loan)</div>
+              <div class="value" id="fhbgStatTotalInterest" style="color:var(--interest)">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Total repaid</div>
+              <div class="value" id="fhbgStatTotalRepaid">—</div>
+            </div>
+          </div>
+
+          <div class="plain-english" id="fhbgRepayPlainEnglish" style="margin-top: 16px; background: var(--interest-light); border-color: var(--interest);"></div>
+
+          <div class="visual-block" style="margin-top: 20px;">
+            <div class="visual-title">First monthly payment (scheme loan)</div>
+            <div class="visual-subtitle">Interest vs principal — same payment each month, split changes over time</div>
+            <div class="bar-container" id="fhbgFirstPaymentBar"></div>
+            <div class="bar-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--interest)"></div> Interest — <strong id="fhbgLegFirstInterest">—</strong></div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--principal-pay)"></div> Principal — <strong id="fhbgLegFirstPrincipal">—</strong></div>
+            </div>
+          </div>
+
+          <table class="repay-table">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Monthly payment</th>
+                <th>Interest</th>
+                <th>Principal</th>
+                <th>Loan remaining</th>
+              </tr>
+            </thead>
+            <tbody id="fhbgRepaySchedule"></tbody>
+          </table>
+        </div>
+
+        <div class="scheme-pill" id="fhbgSchemePill">✓ No LMI with government guarantee (if eligible)</div>
       </div>
 
-      <div class="scheme-pill" id="fhbgSchemePill">✓ No LMI with government guarantee (if eligible)</div>
-    </div>
-
-    <!-- Summary (custom cash scenario) -->
-    <div class="card">
-      <h2>At a glance <span class="badge">Your scenario</span></h2>
-      <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Summary for your chosen <strong>cash contribution</strong> — separate from the First Home Guarantee 5% estimate above.</p>
-      <div class="stats">
-        <div class="stat">
-          <div class="label">Total costs</div>
-          <div class="value" id="statTotal">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">Your cash</div>
-          <div class="value cash" id="statCash">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">Loan amount</div>
-          <div class="value loan" id="statLoan">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">LVR</div>
-          <div class="value lvr" id="statLvr">—</div>
-        </div>
-      </div>
-
-      <div class="subsection" style="margin-top: 20px; padding-top: 0; border-top: none;">
-        <h3 style="margin-bottom: 12px;">LMI &amp; cash buffer <span class="auto-badge" id="bufferAutoBadge">Auto</span></h3>
-        <div class="stats fhbg-stats">
+      <!-- Standard structured loan tab -->
+      <div class="tab-panel" id="tab-glance" role="tabpanel" aria-labelledby="tab-btn-glance">
+        <h2 class="card-inner-title">Standard structured loan <span class="badge">Your cash scenario</span></h2>
+        <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Summary for your chosen <strong>cash contribution</strong> — based on the numbers you entered above.</p>
+        <div class="stats">
           <div class="stat">
-            <div class="label">Est. LMI (your scenario)</div>
-            <div class="value lmi" id="statLmi">—</div>
+            <div class="label">Total costs</div>
+            <div class="value" id="statTotal">—</div>
           </div>
           <div class="stat">
-            <div class="label">Cash buffer</div>
-            <div class="value cash" id="statBuffer">—</div>
+            <div class="label">Your cash</div>
+            <div class="value cash" id="statCash">—</div>
           </div>
           <div class="stat">
-            <div class="label">Total savings to aim for</div>
-            <div class="value" id="statSavingsTarget">—</div>
+            <div class="label">Loan amount</div>
+            <div class="value loan" id="statLoan">—</div>
+          </div>
+          <div class="stat">
+            <div class="label">LVR</div>
+            <div class="value lvr" id="statLvr">—</div>
           </div>
         </div>
-        <div class="field" style="margin-top: 16px;">
-          <label for="buffer">Cash buffer (after settlement)</label>
-          <p class="hint" id="bufferHint">Reserve for emergencies — default updates with your repayments ($20k min or 3 months)</p>
-          <div class="input-row">
-            <span class="prefix">$</span>
-            <input type="number" id="buffer" value="20000" step="1000" min="0">
+
+        <div class="subsection" style="margin-top: 20px; padding-top: 0; border-top: none;">
+          <h3 style="margin-bottom: 12px;">LMI &amp; cash buffer <span class="auto-badge" id="bufferAutoBadge">Auto</span></h3>
+          <div class="stats fhbg-stats">
+            <div class="stat">
+              <div class="label">Est. LMI (your scenario)</div>
+              <div class="value lmi" id="statLmi">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Cash buffer</div>
+              <div class="value cash" id="statBuffer">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Total savings to aim for</div>
+              <div class="value" id="statSavingsTarget">—</div>
+            </div>
           </div>
-          <input type="range" id="bufferSlider" min="0" max="150000" step="1000" value="20000">
-          <button type="button" class="reset-link" id="resetBuffer">↺ Reset to recommended amount</button>
+          <div class="field" style="margin-top: 16px;">
+            <label for="buffer">Cash buffer (after settlement)</label>
+            <p class="hint" id="bufferHint">Reserve for emergencies — default updates with your repayments ($20k min or 3 months)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="buffer" value="20000" step="1000" min="0">
+            </div>
+            <input type="range" id="bufferSlider" min="0" max="150000" step="1000" value="20000">
+            <button type="button" class="reset-link" id="resetBuffer">↺ Reset to recommended amount</button>
+          </div>
+          <div class="extras-note" id="lmiBufferNote"></div>
         </div>
-        <div class="extras-note" id="lmiBufferNote"></div>
+
+        <div id="alertBox" class="alert"></div>
+
+        <div class="subsection" style="margin-top: 28px;">
+          <h2 class="card-inner-title">What is LVR? <span class="badge">Explained simply</span></h2>
+
+          <div class="plain-english" id="plainEnglish"></div>
+
+          <div class="lvr-formula">
+            <div class="formula-box loan">
+              <div class="fb-label">Your loan</div>
+              <div class="fb-value" id="formulaLoan">—</div>
+            </div>
+            <div class="formula-op">÷</div>
+            <div class="formula-box price">
+              <div class="fb-label">Property price</div>
+              <div class="fb-value" id="formulaPrice">—</div>
+            </div>
+            <div class="formula-op">=</div>
+            <div class="formula-box result">
+              <div class="fb-label">LVR</div>
+              <div class="fb-value" id="formulaLvr">—</div>
+            </div>
+          </div>
+
+          <div class="visual-block">
+            <div class="visual-title">Picture the property price</div>
+            <div class="visual-subtitle">Each part of the bar shows who "owns" that slice of the home's value</div>
+            <div class="bar-container" id="propertyBar"></div>
+            <div class="bar-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--loan)"></div> Bank's share (loan) — <strong id="legLoanPct">—</strong></div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Your share (deposit) — <strong id="legDepositPct">—</strong></div>
+            </div>
+          </div>
+
+          <div class="visual-block">
+            <div class="visual-title">Where does your cash go?</div>
+            <div class="visual-subtitle">Your upfront cash covers both the deposit <em>and</em> extra purchase costs</div>
+            <div class="bar-container" id="cashBar"></div>
+            <div class="bar-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Deposit (toward property) — <strong id="legDeposit">—</strong></div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--fees)"></div> Stamp duty & fees — <strong id="legFees">—</strong></div>
+            </div>
+          </div>
+
+          <div class="visual-block">
+            <div class="visual-title">How everything adds up</div>
+            <div class="visual-subtitle">Total purchase costs = your cash + the bank's loan</div>
+            <div class="bar-container" id="totalBar"></div>
+            <div class="bar-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Your cash — <strong id="legCashTotal">—</strong></div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--loan)"></div> Bank loan — <strong id="legLoanTotal">—</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsection" style="margin-top: 28px;">
+          <h2 class="card-inner-title">Monthly repayments <span class="badge">Your cash scenario</span></h2>
+          <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Repayments on the loan based on your <strong>cash contribution</strong> and loan assumptions above.</p>
+
+          <div class="stats repay-stats">
+            <div class="stat">
+              <div class="label">Monthly repayment</div>
+              <div class="value repay" id="statRepayment">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Total interest paid</div>
+              <div class="value" id="statTotalInterest" style="color:var(--interest)">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Total repaid</div>
+              <div class="value" id="statTotalRepaid">—</div>
+            </div>
+          </div>
+
+          <div class="plain-english" id="repayPlainEnglish" style="margin-top: 20px; background: var(--interest-light); border-color: var(--interest);"></div>
+
+          <div class="visual-block" style="margin-top: 24px;">
+            <div class="visual-title">What's in your first monthly payment?</div>
+            <div class="visual-subtitle">Early on, most of each payment goes to interest — the rest pays down the loan</div>
+            <div class="bar-container" id="firstPaymentBar"></div>
+            <div class="bar-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--interest)"></div> Interest — <strong id="legFirstInterest">—</strong></div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--principal-pay)"></div> Principal — <strong id="legFirstPrincipal">—</strong></div>
+            </div>
+          </div>
+
+          <div class="visual-block">
+            <div class="visual-title">How your payments change over time</div>
+            <div class="visual-subtitle">Same total each month — but the split shifts as you pay off the loan</div>
+            <table class="repay-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Monthly payment</th>
+                  <th>Interest portion</th>
+                  <th>Principal portion</th>
+                  <th>Loan remaining</th>
+                </tr>
+              </thead>
+              <tbody id="repaySchedule"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="subsection" style="margin-top: 28px;">
+          <h2 class="card-inner-title">Cost breakdown</h2>
+          <table class="cost-table">
+            <tr><td>Purchase price</td><td id="costPrice">—</td></tr>
+            <tr><td>Stamp duty (transfer of land)</td><td id="costStamp">—</td></tr>
+            <tr><td>Legal fees</td><td id="costLegal">—</td></tr>
+            <tr><td>Conveyancing fees</td><td id="costConveyancing">—</td></tr>
+            <tr><td>Searches &amp; certificates</td><td id="costSearches">—</td></tr>
+            <tr><td>Land registry (NSW LRS)</td><td id="costReg">—</td></tr>
+            <tr><td>Miscellaneous (rates, etc.)</td><td id="costMisc">—</td></tr>
+            <tr><td>Total purchase costs</td><td id="costTotal">—</td></tr>
+            <tr id="costLmiRow"><td>Est. LMI <span style="font-weight:400;color:var(--muted)">(if LVR &gt; 80%)</span></td><td id="costLmi">—</td></tr>
+            <tr><td>Recommended buffer (after settlement)</td><td id="costBuffer">—</td></tr>
+            <tr><td><strong>Total savings to plan for</strong></td><td id="costSavingsTarget"><strong>—</strong></td></tr>
+          </table>
+        </div>
       </div>
-
-      <div id="alertBox" class="alert"></div>
-    </div>
-
-    <!-- LVR Visual Explainer -->
-    <div class="card">
-      <h2>What is LVR? <span class="badge">Explained simply</span></h2>
-
-      <div class="plain-english" id="plainEnglish"></div>
-
-      <div class="lvr-formula">
-        <div class="formula-box loan">
-          <div class="fb-label">Your loan</div>
-          <div class="fb-value" id="formulaLoan">—</div>
-        </div>
-        <div class="formula-op">÷</div>
-        <div class="formula-box price">
-          <div class="fb-label">Property price</div>
-          <div class="fb-value" id="formulaPrice">—</div>
-        </div>
-        <div class="formula-op">=</div>
-        <div class="formula-box result">
-          <div class="fb-label">LVR</div>
-          <div class="fb-value" id="formulaLvr">—</div>
-        </div>
-      </div>
-
-      <div class="visual-block">
-        <div class="visual-title">Picture the property price</div>
-        <div class="visual-subtitle">Each part of the bar shows who "owns" that slice of the home's value</div>
-        <div class="bar-container" id="propertyBar"></div>
-        <div class="bar-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--loan)"></div> Bank's share (loan) — <strong id="legLoanPct">—</strong></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Your share (deposit) — <strong id="legDepositPct">—</strong></div>
-        </div>
-      </div>
-
-      <div class="visual-block">
-        <div class="visual-title">Where does your cash go?</div>
-        <div class="visual-subtitle">Your upfront cash covers both the deposit <em>and</em> extra purchase costs</div>
-        <div class="bar-container" id="cashBar"></div>
-        <div class="bar-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Deposit (toward property) — <strong id="legDeposit">—</strong></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--fees)"></div> Stamp duty & fees — <strong id="legFees">—</strong></div>
-        </div>
-      </div>
-
-      <div class="visual-block">
-        <div class="visual-title">How everything adds up</div>
-        <div class="visual-subtitle">Total purchase costs = your cash + the bank's loan</div>
-        <div class="bar-container" id="totalBar"></div>
-        <div class="bar-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Your cash — <strong id="legCashTotal">—</strong></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--loan)"></div> Bank loan — <strong id="legLoanTotal">—</strong></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Monthly repayments (custom cash scenario) -->
-    <div class="card">
-      <h2>Monthly repayments <span class="badge">Your cash scenario</span></h2>
-      <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Repayments on the loan based on your <strong>cash contribution</strong> input above. Interest rate and loan term are set in the First Home Guarantee section.</p>
-
-      <div class="stats repay-stats">
-        <div class="stat">
-          <div class="label">Monthly repayment</div>
-          <div class="value repay" id="statRepayment">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">Total interest paid</div>
-          <div class="value" id="statTotalInterest" style="color:var(--interest)">—</div>
-        </div>
-        <div class="stat">
-          <div class="label">Total repaid</div>
-          <div class="value" id="statTotalRepaid">—</div>
-        </div>
-      </div>
-
-      <div class="plain-english" id="repayPlainEnglish" style="margin-top: 20px; background: var(--interest-light); border-color: var(--interest);"></div>
-
-      <div class="visual-block" style="margin-top: 24px;">
-        <div class="visual-title">What's in your first monthly payment?</div>
-        <div class="visual-subtitle">Early on, most of each payment goes to interest — the rest pays down the loan</div>
-        <div class="bar-container" id="firstPaymentBar"></div>
-        <div class="bar-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--interest)"></div> Interest — <strong id="legFirstInterest">—</strong></div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--principal-pay)"></div> Principal — <strong id="legFirstPrincipal">—</strong></div>
-        </div>
-      </div>
-
-      <div class="visual-block">
-        <div class="visual-title">How your payments change over time</div>
-        <div class="visual-subtitle">Same total each month — but the split shifts as you pay off the loan</div>
-        <table class="repay-table">
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>Monthly payment</th>
-              <th>Interest portion</th>
-              <th>Principal portion</th>
-              <th>Loan remaining</th>
-            </tr>
-          </thead>
-          <tbody id="repaySchedule"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Cost breakdown -->
-    <div class="card">
-      <h2>Cost breakdown</h2>
-      <table class="cost-table">
-        <tr><td>Purchase price</td><td id="costPrice">—</td></tr>
-        <tr><td>Stamp duty (transfer of land)</td><td id="costStamp">—</td></tr>
-        <tr><td>Legal fees</td><td id="costLegal">—</td></tr>
-        <tr><td>Conveyancing fees</td><td id="costConveyancing">—</td></tr>
-        <tr><td>Searches &amp; certificates</td><td id="costSearches">—</td></tr>
-        <tr><td>Land registry (NSW LRS)</td><td id="costReg">—</td></tr>
-        <tr><td>Miscellaneous (rates, etc.)</td><td id="costMisc">—</td></tr>
-        <tr><td>Total purchase costs</td><td id="costTotal">—</td></tr>
-        <tr id="costLmiRow"><td>Est. LMI <span style="font-weight:400;color:var(--muted)">(if LVR &gt; 80%)</span></td><td id="costLmi">—</td></tr>
-        <tr><td>Recommended buffer (after settlement)</td><td id="costBuffer">—</td></tr>
-        <tr><td><strong>Total savings to plan for</strong></td><td id="costSavingsTarget"><strong>—</strong></td></tr>
-      </table>
     </div>
 
     <div class="card" style="background: var(--bg); box-shadow: none; border-style: dashed;">
@@ -1380,7 +1479,7 @@
       document.getElementById('lmiBufferNote').innerHTML =
         lvr <= 0.8
           ? `<strong>No LMI</strong> at ${pct(lvr)} LVR. Still plan for ${bufferNote} after settlement — on top of your <strong>${fmt(cash)}</strong> purchase cash. ` +
-            `Aim to hold around <strong>${fmt(savingsTarget)}</strong> in total savings. Under the <strong>First Home Guarantee</strong> (above), LMI is typically waived at ~95% LVR.`
+            `Aim to hold around <strong>${fmt(savingsTarget)}</strong> in total savings. Under the <strong>First Home Guarantee</strong> tab, LMI is typically waived at ~95% LVR.`
           : `<strong>LMI ~${fmt(lmi)}</strong> is typical when LVR is ${pct(lvr)} (indicative only — your lender will quote exactly). ` +
             `It is often added to the loan rather than paid upfront. ` +
             `Plus ${bufferNote}. ` +
@@ -1394,7 +1493,7 @@
         alert.textContent = `Your cash (${fmt(cash)}) exceeds total costs (${fmt(totalCosts)}). You wouldn't need to borrow anything.`;
       } else if (lvr > 0.8) {
         alert.className += ' warn';
-        alert.textContent = `Your LVR is ${pct(lvr)} — above 80%. Estimated LMI ~${fmt(lmi)}. Plan ~${fmt(savingsTarget)} total savings (purchase cash + buffer${lmi > 0 ? ', or LMI if paid upfront' : ''}). Consider the First Home Guarantee above to avoid LMI.`;
+        alert.textContent = `Your LVR is ${pct(lvr)} — above 80%. Estimated LMI ~${fmt(lmi)}. Plan ~${fmt(savingsTarget)} total savings (purchase cash + buffer${lmi > 0 ? ', or LMI if paid upfront' : ''}). Consider the First Home Guarantee tab to avoid LMI.`;
       } else {
         alert.className += ' info';
         alert.textContent = `Your LVR is ${pct(lvr)} — at or below 80%, so no LMI. Still aim for ~${fmt(savingsTarget)} total savings including a ${fmt(buffer)} buffer after settlement.`;
@@ -1758,6 +1857,21 @@
       calc();
     });
     document.getElementById('fhbgLocation').addEventListener('change', calc);
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === tabId;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === 'tab-' + tabId);
+      });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
 
     document.querySelectorAll('.preset-btns button').forEach(btn => {
       btn.addEventListener('click', () => {
