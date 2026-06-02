@@ -769,7 +769,7 @@
           <div class="value cash" id="fhbgDeposit">—</div>
         </div>
         <div class="stat">
-          <div class="label">Stamp duty (NSW FHB concession)</div>
+          <div class="label" id="fhbgStampLabel">Stamp duty (NSW FHB concession)</div>
           <div class="value" id="fhbgStamp" style="color:var(--fees)">—</div>
         </div>
         <div class="stat">
@@ -805,9 +805,9 @@
       <table class="cost-table">
         <tr><td>Purchase price</td><td id="fhbgCostPrice">—</td></tr>
         <tr><td>5% deposit (First Home Guarantee minimum)</td><td id="fhbgCostDeposit">—</td></tr>
-        <tr><td>Stamp duty — NSW FHB concession</td><td id="fhbgCostStamp">—</td></tr>
-        <tr class="savings-row"><td>Stamp duty without concession (estimate)</td><td id="fhbgCostStampFull">—</td></tr>
-        <tr class="savings-row"><td>Stamp duty saving</td><td id="fhbgCostStampSaving">—</td></tr>
+        <tr><td id="fhbgCostStampLabel">Stamp duty — NSW FHB concession</td><td id="fhbgCostStamp">—</td></tr>
+        <tr class="savings-row" id="fhbgCostStampFullRow"><td>Stamp duty without concession (estimate)</td><td id="fhbgCostStampFull">—</td></tr>
+        <tr class="savings-row" id="fhbgCostStampSavingRow"><td>Stamp duty saving</td><td id="fhbgCostStampSaving">—</td></tr>
         <tr><td>Legal fees</td><td id="fhbgCostLegal">—</td></tr>
         <tr><td>Conveyancing fees</td><td id="fhbgCostConveyancing">—</td></tr>
         <tr><td>Searches &amp; certificates</td><td id="fhbgCostSearches">—</td></tr>
@@ -1126,6 +1126,8 @@
     };
 
     const FHBG_DEPOSIT_RATE = 0.05;
+    // Revenue NSW FHBAS: concessional duty only when dutiable value is above $800k and below $1M.
+    const NSW_FHB_STAMP_DUTY_CAP = 1000000;
     const BUFFER_MIN = 20000;
     const BUFFER_MONTHS = 3;
 
@@ -1189,12 +1191,16 @@
       return { payment, totalInterest, rows };
     }
 
+    function hasNswFhbStampConcession(price) {
+      return price > 0 && price < NSW_FHB_STAMP_DUTY_CAP;
+    }
+
     // NSW FHBAS concessional duty (transactions from 1 Jul 2025). Official table: $850k=$9,853 … $990k=$37,441.40
-    // Formula matches Revenue NSW published amounts; applies when dutiable value is under $1,000,000.
+    // Concession applies only below $1,000,000; at $1M+ full transfer duty applies.
     function calcNswFhbStampDuty(price) {
+      if (price >= NSW_FHB_STAMP_DUTY_CAP) return calcNswTransferDuty(price);
       if (price <= 800000) return 0;
-      if (price < 1000000) return (price - 800000) / 200000 * 39412;
-      return calcNswTransferDuty(price);
+      return (price - 800000) / 200000 * 39412;
     }
 
     // Revenue NSW general transfer duty 2025/26 (+ premium duty above $3,721,000)
@@ -1209,8 +1215,20 @@
     }
 
     function calcStampDuty(price, isFhb) {
-      if (isFhb) return calcNswFhbStampDuty(price);
+      if (isFhb && hasNswFhbStampConcession(price)) return calcNswFhbStampDuty(price);
       return calcNswTransferDuty(price);
+    }
+
+    function updateFhbLabel(price) {
+      const isFhb = document.getElementById('fhb').checked;
+      const label = document.getElementById('fhbLabel');
+      if (!isFhb) {
+        label.textContent = 'No — full stamp duty applies';
+      } else if (price >= NSW_FHB_STAMP_DUTY_CAP) {
+        label.textContent = 'Yes — but no stamp duty concession at $1M or above (full duty applies)';
+      } else {
+        label.textContent = 'Yes — stamp duty concessions apply';
+      }
     }
 
     function getCalculatedStamp() {
@@ -1388,6 +1406,7 @@
       document.getElementById('cashSlider').value = cash;
 
       updateRepayments(loan);
+      updateFhbLabel(price);
       calcFhbg(price, legal, conveyancing, searches, reg, misc);
     }
 
@@ -1405,7 +1424,17 @@
       const loan = Math.max(0, totalCosts - totalCash);
       const lvr = price > 0 ? loan / price : 0;
       const withinCap = price > 0 && price <= cap;
-      const withinStampConcession = price > 0 && price < 1000000;
+      const withinStampConcession = hasNswFhbStampConcession(price);
+      const stampLabel = withinStampConcession
+        ? 'Stamp duty (NSW FHB concession)'
+        : 'Stamp duty (full transfer duty — no FHBAS concession at $1M+)';
+      const stampTableLabel = withinStampConcession
+        ? 'Stamp duty — NSW FHB concession'
+        : 'Stamp duty — full transfer duty (no FHBAS concession at $1M+)';
+      document.getElementById('fhbgStampLabel').textContent = stampLabel;
+      document.getElementById('fhbgCostStampLabel').textContent = stampTableLabel;
+      document.getElementById('fhbgCostStampFullRow').style.display = withinStampConcession ? '' : 'none';
+      document.getElementById('fhbgCostStampSavingRow').style.display = withinStampConcession ? '' : 'none';
 
       document.getElementById('fhbgDeposit').textContent = fmt(deposit5);
       document.getElementById('fhbgStamp').textContent = fmt(stamp);
@@ -1443,11 +1472,18 @@
       } else if (!withinCap) {
         plain = `At <strong>${fmt(price)}</strong>, this property is <strong>above the ${fmt(cap)} cap</strong> for ${locationLabel} under the First Home Guarantee. You may not qualify for the 5% scheme in this area — check with a participating lender.`;
       } else {
-        plain = `Under the <strong>First Home Guarantee</strong>, your minimum deposit is <strong>5%</strong> of the purchase price = <strong>${fmt(deposit5)}</strong>. ` +
-          `With NSW first home buyer stamp duty concessions, you'd pay <strong>${fmt(stamp)}</strong> stamp duty` +
-          (stampSaving > 0 ? ` (saving about <strong>${fmt(stampSaving)}</strong> vs full duty)` : '') +
-          ` plus <strong>${fmt(otherFees)}</strong> in legal and other fees. ` +
-          `Total cash upfront ≈ <strong>${fmt(totalCash)}</strong>, with a loan of about <strong>${fmt(loan)}</strong> (<strong>${pct(lvr)}</strong> LVR) and <strong>no LMI</strong> if the government guarantee applies.`;
+        if (withinStampConcession) {
+          plain = `Under the <strong>First Home Guarantee</strong>, your minimum deposit is <strong>5%</strong> of the purchase price = <strong>${fmt(deposit5)}</strong>. ` +
+            `With NSW first home buyer stamp duty concessions, you'd pay <strong>${fmt(stamp)}</strong> stamp duty` +
+            (stampSaving > 0 ? ` (saving about <strong>${fmt(stampSaving)}</strong> vs full duty)` : '') +
+            ` plus <strong>${fmt(otherFees)}</strong> in legal and other fees. ` +
+            `Total cash upfront ≈ <strong>${fmt(totalCash)}</strong>, with a loan of about <strong>${fmt(loan)}</strong> (<strong>${pct(lvr)}</strong> LVR) and <strong>no LMI</strong> if the government guarantee applies.`;
+        } else {
+          plain = `Under the <strong>First Home Guarantee</strong>, your minimum deposit is <strong>5%</strong> of the purchase price = <strong>${fmt(deposit5)}</strong>. ` +
+            `At <strong>${fmt(price)}</strong>, NSW FHBAS stamp duty concessions do not apply — you pay full transfer duty of <strong>${fmt(stamp)}</strong> ` +
+            `plus <strong>${fmt(otherFees)}</strong> in legal and other fees. ` +
+            `Total cash upfront ≈ <strong>${fmt(totalCash)}</strong>, with a loan of about <strong>${fmt(loan)}</strong> (<strong>${pct(lvr)}</strong> LVR) and <strong>no LMI</strong> if the government guarantee applies.`;
+        }
       }
       document.getElementById('fhbgPlainEnglish').innerHTML = plain;
 
@@ -1459,7 +1495,7 @@
       } else if (!withinCap) {
         fhbgAlert.className += ' danger';
         fhbgAlert.textContent = `Purchase price exceeds the ${fmt(cap)} First Home Guarantee cap for ${locationLabel}. Consider a lower price or a different area, or speak to your lender about other options.`;
-      } else if (price >= 1000000) {
+      } else if (price >= NSW_FHB_STAMP_DUTY_CAP) {
         fhbgAlert.className += ' warn';
         fhbgAlert.textContent = `At $1,000,000 or above there is no NSW FHBAS stamp duty concession — full transfer duty applies (${fmt(stamp)}). The 5% deposit scheme may still apply if within the ${fmt(cap)} price cap.`;
       } else if (price <= 800000) {
@@ -1706,9 +1742,7 @@
       calc();
     });
     document.getElementById('fhb').addEventListener('change', () => {
-      document.getElementById('fhbLabel').textContent = document.getElementById('fhb').checked
-        ? 'Yes — stamp duty concessions apply'
-        : 'No — full stamp duty applies';
+      updateFhbLabel(Math.max(0, Number(document.getElementById('price').value) || 0));
       syncStampDuty(true);
       calc();
     });
