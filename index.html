@@ -449,6 +449,61 @@
       color: var(--muted);
     }
 
+    .input-lvr-preview {
+      margin-top: 20px;
+      padding: 16px 18px;
+      background: var(--bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .input-lvr-label {
+      font-size: 0.85rem;
+      font-weight: 650;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .input-lvr-formula {
+      margin: 0;
+      padding: 14px;
+    }
+
+    .input-lvr-formula .formula-box {
+      min-width: 100px;
+      padding: 10px 12px;
+    }
+
+    .input-lvr-formula .formula-box .fb-value {
+      font-size: 1.05rem;
+    }
+
+    .input-lvr-formula .formula-box.result .fb-value {
+      font-size: 1.25rem;
+    }
+
+    .input-lvr-formula .formula-box.result.lvr-warn {
+      background: #fef3c7;
+      border-color: var(--warn);
+    }
+
+    .input-lvr-formula .formula-box.result.lvr-warn .fb-value { color: var(--warn); }
+
+    .input-lvr-formula .formula-box.result.lvr-danger {
+      background: #fee2e2;
+      border-color: var(--danger);
+    }
+
+    .input-lvr-formula .formula-box.result.lvr-danger .fb-value { color: var(--danger); }
+
+    .input-lvr-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 10px;
+      margin-bottom: 0;
+      line-height: 1.5;
+    }
+
     .plain-english {
       background: var(--loan-light);
       border-left: 4px solid var(--loan);
@@ -749,14 +804,36 @@
         </div>
         <div class="field">
           <label for="cash">Cash contribution</label>
-          <p class="hint">Total cash you pay upfront (deposit + stamp duty + fees)</p>
+          <p class="hint">Total cash you pay upfront (deposit + stamp duty + fees + preparedness extras)</p>
           <div class="input-row">
             <span class="prefix">$</span>
-            <input type="number" id="cash" value="213384" step="1000" min="0">
+            <input type="number" id="cash" value="218294" step="1000" min="0">
           </div>
-          <input type="range" id="cashSlider" min="100000" max="500000" step="1000" value="213384">
+          <input type="range" id="cashSlider" min="100000" max="500000" step="1000" value="218294">
         </div>
       </div>
+
+      <div class="input-lvr-preview">
+        <div class="input-lvr-label">Your LVR — standard structured loan</div>
+        <div class="lvr-formula input-lvr-formula">
+          <div class="formula-box loan">
+            <div class="fb-label">Loan</div>
+            <div class="fb-value" id="inputFormulaLoan">—</div>
+          </div>
+          <div class="formula-op">÷</div>
+          <div class="formula-box price">
+            <div class="fb-label">Purchase price</div>
+            <div class="fb-value" id="inputFormulaPrice">—</div>
+          </div>
+          <div class="formula-op">=</div>
+          <div class="formula-box result" id="inputFormulaLvrBox">
+            <div class="fb-label">LVR</div>
+            <div class="fb-value" id="inputFormulaLvr">—</div>
+          </div>
+        </div>
+        <p class="input-lvr-hint" id="inputLvrHint">Loan ÷ purchase price, based on your cash contribution and all fees below.</p>
+      </div>
+
       <div class="field" style="margin-top: 20px;">
         <label>First home buyer?</label>
         <div class="toggle-row">
@@ -770,8 +847,8 @@
       <div class="preset-btns">
         <span style="font-size:0.85rem;color:var(--muted);align-self:center;margin-right:4px;">Quick presets:</span>
         <button data-price="800000" data-cash="200000">$800k / $200k cash</button>
-        <button data-price="900000" data-cash="213384" class="active">$900k / 79% LVR</button>
-        <button data-price="1000000" data-cash="254090">$1M / 79% LVR</button>
+        <button data-price="900000" data-cash="218294" class="active">$900k / 79% LVR</button>
+        <button data-price="1000000" data-cash="301040">$1M / 79% LVR</button>
         <button data-price="900000" data-cash="240000">$900k / $240k cash</button>
       </div>
 
@@ -800,7 +877,7 @@
 
       <div class="subsection">
         <h3>Stamp duty &amp; fees <span class="auto-badge" id="stampAutoBadge">Auto</span> <span class="auto-badge" id="feesAutoBadge">Auto</span></h3>
-        <p class="sub-desc">Stamp duty, conveyancing, searches, and registry fees are estimated from your purchase price. Adjust any value if you have a formal quote.</p>
+        <p class="sub-desc">Stamp duty, conveyancing, searches, registry, and preparedness extras are estimated from your purchase price. Adjust any value if you have a formal quote.</p>
         <div class="inputs-grid">
           <div class="field">
             <label for="stamp">Stamp duty (transfer of land)</label>
@@ -841,7 +918,6 @@
               <span class="prefix">$</span>
               <input type="number" id="reg" value="528" step="10" min="0">
             </div>
-            <button type="button" class="reset-link" id="resetFees">↺ Reset all fees to estimates</button>
           </div>
           <div class="field">
             <label for="misc">Miscellaneous (rates, etc.)</label>
@@ -849,6 +925,54 @@
               <span class="prefix">$</span>
               <input type="number" id="misc" value="1000" step="100" min="0">
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3>Preparedness extras <span class="auto-badge" id="preparednessAutoBadge">Auto</span></h3>
+        <p class="sub-desc">For buyers who want to budget every likely upfront cost — moving, inspections, insurance, and council. Estimates scale with your purchase price; adjust any value.</p>
+        <div class="inputs-grid">
+          <div class="field">
+            <label for="moving">Moving costs</label>
+            <p class="hint">Removalists, boxes, storage (~$1,500–$3,000 typical)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="moving" value="2000" step="100" min="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="pest">Pest inspection</label>
+            <p class="hint">Pre-purchase pest / termite report (~$300–$600)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="pest" value="450" step="50" min="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="buildingInsurance">Building insurance</label>
+            <p class="hint">First-year structure cover — required by most lenders before settlement (~$1,200–$2,200)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="buildingInsurance" value="1500" step="50" min="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="homeInsurance">Home insurance</label>
+            <p class="hint">Contents or combined home &amp; contents — first year (~$400–$900)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="homeInsurance" value="600" step="50" min="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="council">Council costs</label>
+            <p class="hint">First rates instalment or settlement adjustment (~$400–$2,500/yr depending on area)</p>
+            <div class="input-row">
+              <span class="prefix">$</span>
+              <input type="number" id="council" value="360" step="50" min="0">
+            </div>
+            <button type="button" class="reset-link" id="resetFees">↺ Reset all fees to estimates</button>
           </div>
         </div>
       </div>
@@ -933,6 +1057,11 @@
           <tr><td>Searches &amp; certificates</td><td id="fhbgCostSearches">—</td></tr>
           <tr><td>Land registry (NSW LRS)</td><td id="fhbgCostReg">—</td></tr>
           <tr><td>Miscellaneous</td><td id="fhbgCostMisc">—</td></tr>
+          <tr><td>Moving costs</td><td id="fhbgCostMoving">—</td></tr>
+          <tr><td>Pest inspection</td><td id="fhbgCostPest">—</td></tr>
+          <tr><td>Building insurance (1st year)</td><td id="fhbgCostBuildingInsurance">—</td></tr>
+          <tr><td>Home insurance (1st year)</td><td id="fhbgCostHomeInsurance">—</td></tr>
+          <tr><td>Council costs</td><td id="fhbgCostCouncil">—</td></tr>
           <tr><td>Total cash you need upfront</td><td id="fhbgCostCashTotal">—</td></tr>
           <tr><td>Loan amount (approx.)</td><td id="fhbgCostLoan">—</td></tr>
           <tr><td>Scheme price cap (your area)</td><td id="fhbgCostCap">—</td></tr>
@@ -1152,6 +1281,11 @@
             <tr><td>Searches &amp; certificates</td><td id="costSearches">—</td></tr>
             <tr><td>Land registry (NSW LRS)</td><td id="costReg">—</td></tr>
             <tr><td>Miscellaneous (rates, etc.)</td><td id="costMisc">—</td></tr>
+            <tr><td>Moving costs</td><td id="costMoving">—</td></tr>
+            <tr><td>Pest inspection</td><td id="costPest">—</td></tr>
+            <tr><td>Building insurance (1st year)</td><td id="costBuildingInsurance">—</td></tr>
+            <tr><td>Home insurance (1st year)</td><td id="costHomeInsurance">—</td></tr>
+            <tr><td>Council costs</td><td id="costCouncil">—</td></tr>
             <tr><td>Total purchase costs</td><td id="costTotal">—</td></tr>
             <tr id="costLmiRow"><td>Est. LMI <span style="font-weight:400;color:var(--muted)">(if LVR &gt; 80%)</span></td><td id="costLmi">—</td></tr>
             <tr><td>Recommended buffer (after settlement)</td><td id="costBuffer">—</td></tr>
@@ -1173,7 +1307,8 @@
         <tr><td>Cash buffer</td><td>Adjustable; default is greater of $20,000 or 3× monthly repayment</td></tr>
         <tr><td>Conveyancing estimate</td><td>NSW typical professional fees ~$1,300–$2,400 by price (industry guides 2025/26)</td></tr>
         <tr><td>Search estimate</td><td>Disbursements ~$300–$650 by price (title, council, water, rates certificates)</td></tr>
-        <tr><td>Not included</td><td>LMI (waived if scheme applies), foreign buyer 9% surcharge, FHOG grant, PEXA (~$130+), building/pest reports, strata levies</td></tr>
+        <tr><td>Preparedness extras</td><td>Moving, pest inspection, building &amp; home insurance (1st year), council rates — indicative defaults by price</td></tr>
+        <tr><td>Not included</td><td>LMI (waived if scheme applies), foreign buyer 9% surcharge, FHOG grant, PEXA (~$130+), strata levies, ongoing utilities</td></tr>
       </table>
       <p class="fhbg-disclaimer" style="margin-top: 12px; margin-bottom: 0;">
         Sources: <a href="https://www.revenue.nsw.gov.au/taxes-duties-levies-royalties/transfer-duty/understanding-transfer-duty/calculate-transfer-duty" target="_blank" rel="noopener">Revenue NSW transfer duty</a>,
@@ -1190,6 +1325,9 @@
     let searchesManual = false;
     let registryManual = false;
     let bufferManual = false;
+    let preparednessManual = false;
+
+    const PREPAREDNESS_FIELDS = ['moving', 'pest', 'buildingInsurance', 'homeInsurance', 'council'];
 
     const DEFAULT_LEGAL = 1000;
     const LRS_TRANSFER_REG = 352;
@@ -1217,6 +1355,42 @@
 
     function calcRegistryFees() {
       return LRS_TRANSFER_REG + LRS_MORTGAGE_REG;
+    }
+
+    function calcPreparednessDefaults(price) {
+      return {
+        moving: price <= 600000 ? 1500 : price <= 1000000 ? 2000 : 2500,
+        pest: 450,
+        buildingInsurance: price <= 600000 ? 1200 : price <= 1000000 ? 1500 : price <= 1500000 ? 1800 : 2200,
+        homeInsurance: 600,
+        council: Math.round(Math.min(2500, Math.max(400, price * 0.0004)))
+      };
+    }
+
+    function readFee(id) {
+      return Math.max(0, Number(document.getElementById(id).value) || 0);
+    }
+
+    function readPreparednessCosts() {
+      return {
+        moving: readFee('moving'),
+        pest: readFee('pest'),
+        buildingInsurance: readFee('buildingInsurance'),
+        homeInsurance: readFee('homeInsurance'),
+        council: readFee('council')
+      };
+    }
+
+    function sumPreparednessCosts(costs) {
+      return costs.moving + costs.pest + costs.buildingInsurance + costs.homeInsurance + costs.council;
+    }
+
+    function readSettlementFees() {
+      return readFee('legal') + readFee('conveyancing') + readFee('searches') + readFee('reg') + readFee('misc');
+    }
+
+    function readAllUpfrontFees() {
+      return readSettlementFees() + sumPreparednessCosts(readPreparednessCosts());
     }
 
     const FHBG_CAPS = {
@@ -1359,6 +1533,17 @@
       }
       const feesAuto = !(conveyancingManual || searchesManual || registryManual);
       document.getElementById('feesAutoBadge').style.display = feesAuto ? 'inline' : 'none';
+      syncPreparednessEstimates(price, autoOnly);
+    }
+
+    function syncPreparednessEstimates(price, autoOnly) {
+      if (autoOnly && preparednessManual) return;
+      const defaults = calcPreparednessDefaults(price);
+      PREPAREDNESS_FIELDS.forEach(id => {
+        document.getElementById(id).value = defaults[id];
+      });
+      preparednessManual = false;
+      document.getElementById('preparednessAutoBadge').style.display = 'inline';
     }
 
     function resetAllFees() {
@@ -1367,10 +1552,26 @@
       conveyancingManual = false;
       searchesManual = false;
       registryManual = false;
+      preparednessManual = false;
       document.getElementById('conveyancing').value = calcConveyancingFee(price);
       document.getElementById('searches').value = calcSearchDisbursements(price);
       document.getElementById('reg').value = calcRegistryFees();
+      syncPreparednessEstimates(price, false);
       document.getElementById('feesAutoBadge').style.display = 'inline';
+    }
+
+    function updatePreparednessDisplay(costs) {
+      const set = (id, val) => { document.getElementById(id).textContent = fmt(val); };
+      set('costMoving', costs.moving);
+      set('costPest', costs.pest);
+      set('costBuildingInsurance', costs.buildingInsurance);
+      set('costHomeInsurance', costs.homeInsurance);
+      set('costCouncil', costs.council);
+      set('fhbgCostMoving', costs.moving);
+      set('fhbgCostPest', costs.pest);
+      set('fhbgCostBuildingInsurance', costs.buildingInsurance);
+      set('fhbgCostHomeInsurance', costs.homeInsurance);
+      set('fhbgCostCouncil', costs.council);
     }
 
     function calc() {
@@ -1381,8 +1582,10 @@
       const conveyancing = Math.max(0, Number(document.getElementById('conveyancing').value) || 0);
       const searches = Math.max(0, Number(document.getElementById('searches').value) || 0);
       const reg = Math.max(0, Number(document.getElementById('reg').value) || 0);
-      const misc = Math.max(0, Number(document.getElementById('misc').value) || 0);
-      const fixedFees = legal + conveyancing + searches + reg + misc;
+      const misc = readFee('misc');
+      const preparedness = readPreparednessCosts();
+      const preparednessTotal = sumPreparednessCosts(preparedness);
+      const fixedFees = readSettlementFees() + preparednessTotal;
 
       const totalCosts = price + stamp + fixedFees;
       const loan = Math.max(0, totalCosts - cash);
@@ -1398,6 +1601,21 @@
       const lvrEl = document.getElementById('statLvr');
       lvrEl.textContent = pct(lvr);
       lvrEl.className = 'value lvr' + (lvr >= 0.85 ? ' danger' : lvr >= 0.8 ? ' warn' : '');
+
+      // Input section LVR preview
+      document.getElementById('inputFormulaLoan').textContent = fmt(loan);
+      document.getElementById('inputFormulaPrice').textContent = fmt(price);
+      document.getElementById('inputFormulaLvr').textContent = pct(lvr);
+      const inputLvrBox = document.getElementById('inputFormulaLvrBox');
+      inputLvrBox.className = 'formula-box result' + (lvr >= 0.85 ? ' lvr-danger' : lvr >= 0.8 ? ' lvr-warn' : '');
+      const lvrHint = document.getElementById('inputLvrHint');
+      if (cash > totalCosts) {
+        lvrHint.textContent = 'Your cash covers all costs — no loan needed (0% LVR).';
+      } else if (lvr > 0.8) {
+        lvrHint.textContent = `${pct(lvr)} LVR — above 80%, lenders typically charge LMI unless you use the First Home Guarantee tab.`;
+      } else {
+        lvrHint.textContent = `${pct(lvr)} LVR — at or below 80%, no LMI typically required. Based on cash and all fees below.`;
+      }
 
       // Formula boxes
       document.getElementById('formulaLoan').textContent = fmt(loan);
@@ -1448,6 +1666,7 @@
       document.getElementById('costSearches').textContent = fmt(searches);
       document.getElementById('costReg').textContent = fmt(reg);
       document.getElementById('costMisc').textContent = fmt(misc);
+      updatePreparednessDisplay(preparedness);
       document.getElementById('costTotal').textContent = fmt(totalCosts);
 
       const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
@@ -1506,16 +1725,23 @@
 
       updateRepayments(loan);
       updateFhbLabel(price);
-      calcFhbg(price, legal, conveyancing, searches, reg, misc);
+      calcFhbg(price);
     }
 
-    function calcFhbg(price, legal, conveyancing, searches, reg, misc) {
+    function calcFhbg(price) {
+      const legal = readFee('legal');
+      const conveyancing = readFee('conveyancing');
+      const searches = readFee('searches');
+      const reg = readFee('reg');
+      const misc = readFee('misc');
+      const preparedness = readPreparednessCosts();
+      const preparednessTotal = sumPreparednessCosts(preparedness);
       const location = document.getElementById('fhbgLocation').value;
       const { label: locationLabel, cap } = FHBG_CAPS[location];
 
       const stamp = calcNswFhbStampDuty(price);
       const deposit5 = price * FHBG_DEPOSIT_RATE;
-      const otherFees = legal + conveyancing + searches + reg + misc;
+      const otherFees = readSettlementFees() + preparednessTotal;
       const stampFull = calcNswTransferDuty(price);
       const stampSaving = Math.max(0, stampFull - stamp);
       const totalCash = deposit5 + stamp + otherFees;
@@ -1552,6 +1778,7 @@
       document.getElementById('fhbgCostSearches').textContent = fmt(searches);
       document.getElementById('fhbgCostReg').textContent = fmt(reg);
       document.getElementById('fhbgCostMisc').textContent = fmt(misc);
+      updatePreparednessDisplay(preparedness);
       document.getElementById('fhbgCostCashTotal').textContent = fmt(totalCash);
       document.getElementById('fhbgCostLoan').textContent = fmt(loan);
       document.getElementById('fhbgCostCap').textContent = fmt(cap) + ' (' + locationLabel + ')';
@@ -1802,6 +2029,13 @@
       document.getElementById('feesAutoBadge').style.display = 'none';
       calc();
     });
+    PREPAREDNESS_FIELDS.forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        preparednessManual = true;
+        document.getElementById('preparednessAutoBadge').style.display = 'none';
+        calc();
+      });
+    });
     document.getElementById('stamp').addEventListener('input', () => {
       stampDutyManual = true;
       document.getElementById('stampAutoBadge').style.display = 'none';
@@ -1831,8 +2065,7 @@
       const price = Math.max(0, Number(document.getElementById('price').value) || 0);
       const cash = Math.max(0, Number(document.getElementById('cash').value) || 0);
       const stamp = Math.max(0, Number(document.getElementById('stamp').value) || 0);
-      const fixedFees = ['legal', 'conveyancing', 'searches', 'reg', 'misc'].reduce((s, id) =>
-        s + Math.max(0, Number(document.getElementById(id).value) || 0), 0);
+      const fixedFees = readAllUpfrontFees();
       const totalCosts = price + stamp + fixedFees;
       const loanAmt = Math.max(0, totalCosts - cash);
       const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
