@@ -504,6 +504,71 @@
       line-height: 1.5;
     }
 
+    .deposit-breakdown {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .deposit-breakdown-title {
+      font-size: 0.78rem;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .deposit-breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .deposit-breakdown-table td {
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .deposit-breakdown-table td:last-child {
+      text-align: right;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .deposit-breakdown-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .deposit-breakdown-table .breakdown-row td:first-child {
+      padding-left: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .deposit-breakdown-table .breakdown-row.deposit td:last-child {
+      color: var(--cash);
+    }
+
+    .deposit-breakdown-table .breakdown-row.fees td:last-child {
+      color: var(--fees);
+    }
+
+    .deposit-breakdown-table .subtotal-row td {
+      font-weight: 650;
+      padding-top: 8px;
+    }
+
+    .cost-table .breakdown-row td:first-child {
+      padding-left: 14px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .cost-table .breakdown-row.deposit td:last-child { color: var(--cash); }
+    .cost-table .breakdown-row.fees td:last-child { color: var(--fees); }
+
     .plain-english {
       background: var(--loan-light);
       border-left: 4px solid var(--loan);
@@ -783,7 +848,7 @@
     <header>
       <div class="house-icon">🏠</div>
       <h1>Home Loan & LVR Calculator</h1>
-      <p>Adjust your cash contribution and see exactly how your loan-to-value ratio (LVR) is calculated — no spreadsheet skills needed.</p>
+      <p>Adjust your deposit and see exactly how your loan-to-value ratio (LVR) is calculated — stamp duty and fees are separate and don't affect LVR.</p>
       <p class="fhbg-disclaimer" style="margin-top: 12px; max-width: 640px; margin-left: auto; margin-right: auto;">
         Rates aligned to <strong>Revenue NSW</strong> transfer duty (2025/26), <strong>FHBAS</strong> (from 1 Jul 2025), and the <strong>5% Deposit Scheme</strong> (from 1 Oct 2025). Estimates only — not legal or financial advice.
       </p>
@@ -792,7 +857,7 @@
     <!-- Inputs -->
     <div class="card">
       <h2>Your numbers</h2>
-      <div class="inputs-grid">
+      <div class="inputs-grid three-col">
         <div class="field">
           <label for="price">Purchase price</label>
           <p class="hint">The price of the property you're buying</p>
@@ -803,13 +868,22 @@
           <input type="range" id="priceSlider" min="500000" max="1500000" step="10000" value="900000">
         </div>
         <div class="field">
-          <label for="cash">Cash contribution</label>
-          <p class="hint">Total cash you pay upfront (deposit + stamp duty + fees + preparedness extras)</p>
+          <label for="deposit">Deposit</label>
+          <p class="hint">Cash toward the property price — drives LVR</p>
           <div class="input-row">
             <span class="prefix">$</span>
-            <input type="number" id="cash" value="218334" step="1000" min="0">
+            <input type="number" id="deposit" value="189000" step="1000" min="0">
           </div>
-          <input type="range" id="cashSlider" min="100000" max="500000" step="1000" value="218334">
+          <input type="range" id="depositSlider" min="0" max="500000" step="1000" value="189000">
+        </div>
+        <div class="field">
+          <label for="totalCash">Total cash upfront</label>
+          <p class="hint">Deposit + stamp duty + fees — adjust this or deposit; the other updates automatically</p>
+          <div class="input-row">
+            <span class="prefix">$</span>
+            <input type="number" id="totalCash" value="218334" step="1000" min="0">
+          </div>
+          <input type="range" id="totalCashSlider" min="0" max="500000" step="1000" value="218334">
         </div>
       </div>
 
@@ -831,7 +905,17 @@
             <div class="fb-value" id="inputFormulaLvr">—</div>
           </div>
         </div>
-        <p class="input-lvr-hint" id="inputLvrHint">Loan ÷ purchase price, based on your cash contribution and all fees below.</p>
+        <div class="deposit-breakdown">
+          <div class="deposit-breakdown-title">Deposit breakdown</div>
+          <table class="deposit-breakdown-table">
+            <tr class="breakdown-row deposit"><td>Deposit (toward property)</td><td id="inputDeposit">—</td></tr>
+            <tr class="breakdown-row"><td>Deposit as % of price</td><td id="inputDepositPct">—</td></tr>
+            <tr class="breakdown-row fees"><td>Stamp duty</td><td id="inputStampDuty">—</td></tr>
+            <tr class="breakdown-row fees"><td>Settlement &amp; preparedness fees</td><td id="inputOtherFees">—</td></tr>
+            <tr class="subtotal-row"><td>Total cash upfront</td><td id="inputTotalCash">—</td></tr>
+          </table>
+        </div>
+        <p class="input-lvr-hint" id="inputLvrHint">Loan ÷ purchase price — based on your deposit only. Stamp duty and fees are paid separately.</p>
       </div>
 
       <div class="field" style="margin-top: 20px;">
@@ -846,10 +930,10 @@
       </div>
       <div class="preset-btns">
         <span style="font-size:0.85rem;color:var(--muted);align-self:center;margin-right:4px;">Quick presets:</span>
-        <button data-price="800000" data-cash="200000">$800k / $200k cash</button>
+        <button data-price="800000" data-deposit="200000">$800k / $200k deposit</button>
         <button data-price="900000" data-lvr="79" class="active">$900k / 79% LVR</button>
         <button data-price="1000000" data-lvr="79">$1M / 79% LVR</button>
-        <button data-price="900000" data-cash="240000">$900k / $240k cash</button>
+        <button data-price="900000" data-deposit="240000">$900k / $240k deposit</button>
       </div>
 
       <div class="subsection">
@@ -1117,16 +1201,16 @@
 
       <!-- Standard structured loan tab -->
       <div class="tab-panel" id="tab-glance" role="tabpanel" aria-labelledby="tab-btn-glance">
-        <h2 class="card-inner-title">Standard structured loan <span class="badge">Your cash scenario</span></h2>
-        <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Summary for your chosen <strong>cash contribution</strong> — based on the numbers you entered above.</p>
+        <h2 class="card-inner-title">Standard structured loan <span class="badge">Your deposit scenario</span></h2>
+        <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Summary for your chosen <strong>deposit</strong> — LVR uses deposit only; stamp duty and fees are extra cash upfront.</p>
         <div class="stats">
           <div class="stat">
             <div class="label">Total costs</div>
             <div class="value" id="statTotal">—</div>
           </div>
           <div class="stat">
-            <div class="label">Your cash</div>
-            <div class="value cash" id="statCash">—</div>
+            <div class="label">Total cash upfront</div>
+            <div class="value cash" id="statTotalCash">—</div>
           </div>
           <div class="stat">
             <div class="label">Loan amount</div>
@@ -1191,6 +1275,17 @@
             </div>
           </div>
 
+          <div class="deposit-breakdown" style="margin-bottom: 20px;">
+            <div class="deposit-breakdown-title">Deposit breakdown</div>
+            <table class="deposit-breakdown-table">
+              <tr class="breakdown-row deposit"><td>Deposit (toward property)</td><td id="formulaDeposit">—</td></tr>
+              <tr class="breakdown-row"><td>Deposit as % of price</td><td id="formulaDepositPct">—</td></tr>
+              <tr class="breakdown-row fees"><td>Stamp duty</td><td id="formulaStampDuty">—</td></tr>
+              <tr class="breakdown-row fees"><td>Settlement &amp; preparedness fees</td><td id="formulaOtherFees">—</td></tr>
+              <tr class="subtotal-row"><td>Total cash upfront</td><td id="formulaTotalCash">—</td></tr>
+            </table>
+          </div>
+
           <div class="visual-block">
             <div class="visual-title">Picture the property price</div>
             <div class="visual-subtitle">Each part of the bar shows who "owns" that slice of the home's value</div>
@@ -1203,17 +1298,18 @@
 
           <div class="visual-block">
             <div class="visual-title">Where does your cash go?</div>
-            <div class="visual-subtitle">Your upfront cash covers both the deposit <em>and</em> extra purchase costs</div>
+            <div class="visual-subtitle">Your upfront cash covers the deposit, stamp duty, and other purchase costs</div>
             <div class="bar-container" id="cashBar"></div>
             <div class="bar-legend">
-              <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Deposit (toward property) — <strong id="legDeposit">—</strong></div>
-              <div class="legend-item"><div class="legend-dot" style="background:var(--fees)"></div> Stamp duty & fees — <strong id="legFees">—</strong></div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Deposit — <strong id="legDeposit">—</strong></div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--fees)"></div> Stamp duty — <strong id="legStamp">—</strong></div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--muted)"></div> Other fees — <strong id="legOtherFees">—</strong></div>
             </div>
           </div>
 
           <div class="visual-block">
             <div class="visual-title">How everything adds up</div>
-            <div class="visual-subtitle">Total purchase costs = your cash + the bank's loan</div>
+            <div class="visual-subtitle">Total purchase costs = your upfront cash + the bank's loan</div>
             <div class="bar-container" id="totalBar"></div>
             <div class="bar-legend">
               <div class="legend-item"><div class="legend-dot" style="background:var(--cash)"></div> Your cash — <strong id="legCashTotal">—</strong></div>
@@ -1223,8 +1319,8 @@
         </div>
 
         <div class="subsection" style="margin-top: 28px;">
-          <h2 class="card-inner-title">Monthly repayments <span class="badge">Your cash scenario</span></h2>
-          <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Repayments on the loan based on your <strong>cash contribution</strong> and loan assumptions above.</p>
+          <h2 class="card-inner-title">Monthly repayments <span class="badge">Your deposit scenario</span></h2>
+          <p class="fhbg-disclaimer" style="margin-bottom: 16px;">Repayments on the loan based on your <strong>deposit</strong> and loan assumptions above.</p>
 
           <div class="stats repay-stats">
             <div class="stat">
@@ -1287,7 +1383,11 @@
             <tr><td>Home insurance (1st year)</td><td id="costHomeInsurance">—</td></tr>
             <tr><td>Council costs</td><td id="costCouncil">—</td></tr>
             <tr class="subtotal"><td>Total purchase costs</td><td id="costTotal">—</td></tr>
-            <tr class="savings-row"><td>Your cash contribution</td><td id="costCash">—</td></tr>
+            <tr class="breakdown-row deposit"><td>Deposit (toward property)</td><td id="costDeposit">—</td></tr>
+            <tr class="breakdown-row"><td>Deposit as % of price</td><td id="costDepositPct">—</td></tr>
+            <tr class="breakdown-row fees"><td>Stamp duty (paid upfront)</td><td id="costStampDuty">—</td></tr>
+            <tr class="breakdown-row fees"><td>Settlement &amp; preparedness fees</td><td id="costOtherFees">—</td></tr>
+            <tr class="savings-row"><td>Total cash upfront</td><td id="costTotalCash">—</td></tr>
             <tr><td>Loan amount</td><td id="costLoan">—</td></tr>
             <tr id="costLmiRow"><td>Est. LMI <span style="font-weight:400;color:var(--muted)">(if LVR &gt; 80%)</span></td><td id="costLmi">—</td></tr>
             <tr><td>Recommended buffer (after settlement)</td><td id="costBuffer">—</td></tr>
@@ -1303,7 +1403,7 @@
         <tr><td>Transfer duty (standard)</td><td>Revenue NSW 2025/26 marginal rates; premium duty above $3,721,000</td></tr>
         <tr><td>FHB stamp duty concession</td><td>FHBAS: $0 up to $800k; sliding scale $800,001–$999,999 (official table from 1 Jul 2025)</td></tr>
         <tr><td>5% Deposit Scheme</td><td>Min 5% of property value; NSW caps $1.5M (metro centres) / $800k (other) from 1 Oct 2025</td></tr>
-        <tr><td>LVR</td><td>Loan ÷ purchase price (lender may use valuation if different)</td></tr>
+        <tr><td>LVR</td><td>Loan ÷ purchase price — based on deposit only; stamp duty and fees are separate (lender may use valuation if different)</td></tr>
         <tr><td>Monthly repayments</td><td>Standard P&amp;I amortisation; max 30-year term per scheme guidance</td></tr>
         <tr><td>LMI estimate</td><td>Indicative % of loan by LVR band if above 80%; $0 under First Home Guarantee</td></tr>
         <tr><td>Cash buffer</td><td>Adjustable; default is greater of $20,000 or 3× monthly repayment</td></tr>
@@ -1328,6 +1428,7 @@
     let registryManual = false;
     let bufferManual = false;
     let preparednessManual = false;
+    let cashDriver = 'deposit';
 
     const PREPAREDNESS_FIELDS = ['moving', 'pest', 'buildingInsurance', 'homeInsurance', 'council'];
 
@@ -1392,27 +1493,14 @@
       return readFee('legal') + readFee('conveyancing') + readFee('searches') + readFee('reg') + readFee('misc');
     }
 
-    function calcPurchaseTotalsForPrice(price, isFhb) {
-      const stamp = Math.round(calcStampDuty(price, isFhb));
-      const conveyancing = calcConveyancingFee(price);
-      const searches = calcSearchDisbursements(price);
-      const reg = calcRegistryFees();
-      const preparedness = calcPreparednessDefaults(price);
-      const fixedFees = DEFAULT_LEGAL + conveyancing + searches + reg + DEFAULT_MISC + sumPreparednessCosts(preparedness);
-      return { stamp, fixedFees, totalCosts: price + stamp + fixedFees };
+    function calcDepositForTargetLvr(price, targetLvr) {
+      return Math.max(0, Math.round(price * (1 - targetLvr)));
     }
 
-    function calcCashForTargetLvr(price, targetLvr) {
-      const isFhb = document.getElementById('fhb').checked;
-      const { totalCosts } = calcPurchaseTotalsForPrice(price, isFhb);
-      const loan = Math.round(price * targetLvr);
-      return Math.max(0, Math.round(totalCosts - loan));
-    }
-
-    function getPresetTargetCash(btn) {
+    function getPresetTargetDeposit(btn) {
       const price = Number(btn.dataset.price) || 0;
-      if (btn.dataset.lvr) return calcCashForTargetLvr(price, Number(btn.dataset.lvr) / 100);
-      return Number(btn.dataset.cash) || 0;
+      if (btn.dataset.lvr) return calcDepositForTargetLvr(price, Number(btn.dataset.lvr) / 100);
+      return Number(btn.dataset.deposit) || 0;
     }
 
     function readAllUpfrontFees() {
@@ -1462,6 +1550,45 @@
     const fmt = (n) => '$' + Math.round(n).toLocaleString('en-AU');
     const fmtDec = (n) => '$' + n.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
     const pct = (n) => (n * 100).toFixed(1) + '%';
+
+    function readUpfrontFeeTotals() {
+      const stamp = Math.max(0, Number(document.getElementById('stamp').value) || 0);
+      const otherFees = readSettlementFees() + sumPreparednessCosts(readPreparednessCosts());
+      return { stamp, otherFees, feesTotal: stamp + otherFees };
+    }
+
+    function syncCashInputs(driver) {
+      if (driver) cashDriver = driver;
+      const { feesTotal } = readUpfrontFeeTotals();
+
+      if (cashDriver === 'totalCash') {
+        const totalCash = Math.max(0, Number(document.getElementById('totalCash').value) || 0);
+        document.getElementById('deposit').value = Math.max(0, Math.round(totalCash - feesTotal));
+      } else {
+        const deposit = Math.max(0, Number(document.getElementById('deposit').value) || 0);
+        document.getElementById('totalCash').value = Math.round(deposit + feesTotal);
+      }
+    }
+
+    function updateCashBreakdown(deposit, stamp, otherFees, totalCash, price) {
+      const depositPct = price > 0 ? pct(deposit / price) : '—';
+      const set = (id, val) => { document.getElementById(id).textContent = val; };
+      [
+        'inputDeposit', 'formulaDeposit', 'costDeposit'
+      ].forEach(id => set(id, fmt(deposit)));
+      [
+        'inputDepositPct', 'formulaDepositPct', 'costDepositPct'
+      ].forEach(id => set(id, depositPct));
+      [
+        'inputStampDuty', 'formulaStampDuty', 'costStampDuty'
+      ].forEach(id => set(id, fmt(stamp)));
+      [
+        'inputOtherFees', 'formulaOtherFees', 'costOtherFees'
+      ].forEach(id => set(id, fmt(otherFees)));
+      [
+        'inputTotalCash', 'formulaTotalCash', 'costTotalCash'
+      ].forEach(id => set(id, fmt(totalCash)));
+    }
 
     function calcMonthlyPayment(principal, annualRatePct, years) {
       if (principal <= 0 || years <= 0) return 0;
@@ -1602,8 +1729,11 @@
     }
 
     function calc() {
+      syncCashInputs();
+
       const price = Math.max(0, Number(document.getElementById('price').value) || 0);
-      const cash = Math.max(0, Number(document.getElementById('cash').value) || 0);
+      const deposit = Math.max(0, Number(document.getElementById('deposit').value) || 0);
+      const totalCash = Math.max(0, Number(document.getElementById('totalCash').value) || 0);
       const stamp = Math.max(0, Number(document.getElementById('stamp').value) || 0);
       const legal = Math.max(0, Number(document.getElementById('legal').value) || 0);
       const conveyancing = Math.max(0, Number(document.getElementById('conveyancing').value) || 0);
@@ -1612,17 +1742,15 @@
       const misc = readFee('misc');
       const preparedness = readPreparednessCosts();
       const preparednessTotal = sumPreparednessCosts(preparedness);
-      const fixedFees = readSettlementFees() + preparednessTotal;
+      const otherFees = readSettlementFees() + preparednessTotal;
 
-      const totalCosts = price + stamp + fixedFees;
-      const loan = Math.max(0, totalCosts - cash);
+      const totalCosts = price + stamp + otherFees;
+      const loan = Math.max(0, price - deposit);
       const lvr = price > 0 ? loan / price : 0;
-      const deposit = Math.max(0, price - loan);
-      const feesFromCash = Math.max(0, cash - deposit);
 
       // Update stats
       document.getElementById('statTotal').textContent = fmt(totalCosts);
-      document.getElementById('statCash').textContent = fmt(cash);
+      document.getElementById('statTotalCash').textContent = fmt(totalCash);
       document.getElementById('statLoan').textContent = fmt(loan);
 
       const lvrEl = document.getElementById('statLvr');
@@ -1636,13 +1764,15 @@
       const inputLvrBox = document.getElementById('inputFormulaLvrBox');
       inputLvrBox.className = 'formula-box result' + (lvr >= 0.85 ? ' lvr-danger' : lvr >= 0.8 ? ' lvr-warn' : '');
       const lvrHint = document.getElementById('inputLvrHint');
-      if (cash > totalCosts) {
-        lvrHint.textContent = 'Your cash covers all costs — no loan needed (0% LVR).';
+      if (deposit >= price && price > 0) {
+        lvrHint.textContent = 'Your deposit covers the full property price — no loan needed (0% LVR).';
       } else if (lvr > 0.8) {
         lvrHint.textContent = `${pct(lvr)} LVR — above 80%, lenders typically charge LMI unless you use the First Home Guarantee tab.`;
       } else {
-        lvrHint.textContent = `${pct(lvr)} LVR — at or below 80%, no LMI typically required. Based on cash and all fees below.`;
+        lvrHint.textContent = `${pct(lvr)} LVR — at or below 80%, no LMI typically required. Based on your deposit only.`;
       }
+
+      updateCashBreakdown(deposit, stamp, otherFees, totalCash, price);
 
       // Formula boxes
       document.getElementById('formulaLoan').textContent = fmt(loan);
@@ -1668,21 +1798,23 @@
       document.getElementById('legDepositPct').textContent = price > 0 ? pct(deposit / price) : '—';
 
       // Cash bar
-      const cashTotal = cash || 1;
+      const cashTotal = totalCash || 1;
       renderBar('cashBar', [
         { cls: 'deposit', pct: (deposit / cashTotal) * 100, label: fmt(deposit), minPct: 10 },
-        { cls: 'fees', pct: (feesFromCash / cashTotal) * 100, label: fmt(feesFromCash), minPct: 10 }
-      ], cash, 'Your cash');
+        { cls: 'fees', pct: (stamp / cashTotal) * 100, label: fmt(stamp), minPct: 8 },
+        { cls: 'loan', pct: (otherFees / cashTotal) * 100, label: fmt(otherFees), minPct: 8 }
+      ], totalCash, 'Total cash upfront');
       document.getElementById('legDeposit').textContent = fmt(deposit);
-      document.getElementById('legFees').textContent = fmt(feesFromCash);
+      document.getElementById('legStamp').textContent = fmt(stamp);
+      document.getElementById('legOtherFees').textContent = fmt(otherFees);
 
       // Total costs bar
       const tc = totalCosts || 1;
       renderBar('totalBar', [
-        { cls: 'cash', pct: (cash / tc) * 100, label: fmt(cash), minPct: 10 },
+        { cls: 'cash', pct: (totalCash / tc) * 100, label: fmt(totalCash), minPct: 10 },
         { cls: 'loan', pct: (loan / tc) * 100, label: fmt(loan), minPct: 10 }
       ], totalCosts, 'Total costs');
-      document.getElementById('legCashTotal').textContent = fmt(cash);
+      document.getElementById('legCashTotal').textContent = fmt(totalCash);
       document.getElementById('legLoanTotal').textContent = fmt(loan);
 
       // Cost table
@@ -1695,7 +1827,6 @@
       document.getElementById('costMisc').textContent = fmt(misc);
       updatePreparednessDisplay(preparedness);
       document.getElementById('costTotal').textContent = fmt(totalCosts);
-      document.getElementById('costCash').textContent = fmt(cash);
       document.getElementById('costLoan').textContent = fmt(loan);
 
       const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
@@ -1704,7 +1835,7 @@
       const recommendedBuffer = syncBuffer(monthlyPayment, true);
       const buffer = Math.max(0, Number(document.getElementById('buffer').value) || 0);
       const lmi = calcLmiEstimate(loan, lvr);
-      const savingsTarget = cash + lmi + buffer;
+      const savingsTarget = totalCash + lmi + buffer;
 
       const lmiEl = document.getElementById('statLmi');
       if (lvr <= 0.8) {
@@ -1726,22 +1857,22 @@
         : `a <strong>${fmt(buffer)}</strong> buffer (recommended: ${fmt(recommendedBuffer)})`;
       document.getElementById('lmiBufferNote').innerHTML =
         lvr <= 0.8
-          ? `<strong>No LMI</strong> at ${pct(lvr)} LVR. Still plan for ${bufferNote} after settlement — on top of your <strong>${fmt(cash)}</strong> purchase cash. ` +
+          ? `<strong>No LMI</strong> at ${pct(lvr)} LVR. Still plan for ${bufferNote} after settlement — on top of your <strong>${fmt(totalCash)}</strong> upfront cash (deposit + stamp duty + fees). ` +
             `Aim to hold around <strong>${fmt(savingsTarget)}</strong> in total savings. Under the <strong>First Home Guarantee</strong> tab, LMI is typically waived at ~95% LVR.`
           : `<strong>LMI ~${fmt(lmi)}</strong> is typical when LVR is ${pct(lvr)} (indicative only — your lender will quote exactly). ` +
             `It is often added to the loan rather than paid upfront. ` +
             `Plus ${bufferNote}. ` +
-            `Plan for roughly <strong>${fmt(savingsTarget)}</strong> total: ${fmt(cash)} purchase cash + ${fmt(lmi)} LMI if paid upfront + ${fmt(buffer)} buffer.`;
+            `Plan for roughly <strong>${fmt(savingsTarget)}</strong> total: ${fmt(totalCash)} upfront cash + ${fmt(lmi)} LMI if paid upfront + ${fmt(buffer)} buffer.`;
 
       // Alerts
       const alert = document.getElementById('alertBox');
       alert.className = 'alert show';
-      if (cash > totalCosts) {
+      if (deposit >= price && price > 0) {
         alert.className += ' info';
-        alert.textContent = `Your cash (${fmt(cash)}) exceeds total costs (${fmt(totalCosts)}). You wouldn't need to borrow anything.`;
+        alert.textContent = `Your deposit (${fmt(deposit)}) covers the full property price — no loan needed (0% LVR). You'll still need ${fmt(stamp + otherFees)} for stamp duty and fees.`;
       } else if (lvr > 0.8) {
         alert.className += ' warn';
-        alert.textContent = `Your LVR is ${pct(lvr)} — above 80%. Estimated LMI ~${fmt(lmi)}. Plan ~${fmt(savingsTarget)} total savings (purchase cash + buffer${lmi > 0 ? ', or LMI if paid upfront' : ''}). Consider the First Home Guarantee tab to avoid LMI.`;
+        alert.textContent = `Your LVR is ${pct(lvr)} — above 80%. Estimated LMI ~${fmt(lmi)}. Plan ~${fmt(savingsTarget)} total savings (upfront cash + buffer${lmi > 0 ? ', or LMI if paid upfront' : ''}). Consider the First Home Guarantee tab to avoid LMI.`;
       } else {
         alert.className += ' info';
         alert.textContent = `Your LVR is ${pct(lvr)} — at or below 80%, so no LMI. Still aim for ~${fmt(savingsTarget)} total savings including a ${fmt(buffer)} buffer after settlement.`;
@@ -1749,8 +1880,10 @@
 
       // Sync sliders
       document.getElementById('priceSlider').value = price;
-      document.getElementById('cashSlider').max = Math.max(500000, Math.round(totalCosts));
-      document.getElementById('cashSlider').value = cash;
+      document.getElementById('depositSlider').max = Math.max(500000, Math.round(price));
+      document.getElementById('depositSlider').value = deposit;
+      document.getElementById('totalCashSlider').max = Math.max(500000, Math.round(totalCosts));
+      document.getElementById('totalCashSlider').value = totalCash;
 
       updateRepayments(loan);
       updateFhbLabel(price);
@@ -2010,13 +2143,13 @@
 
     function syncPresetButtons() {
       const price = Number(document.getElementById('price').value) || 0;
-      const cash = Number(document.getElementById('cash').value) || 0;
+      const deposit = Number(document.getElementById('deposit').value) || 0;
       document.querySelectorAll('.preset-btns button').forEach(btn => {
         const presetPrice = Number(btn.dataset.price) || 0;
         let isMatch = presetPrice === price;
         if (isMatch) {
-          const targetCash = getPresetTargetCash(btn);
-          isMatch = Math.abs(cash - targetCash) <= 1;
+          const targetDeposit = getPresetTargetDeposit(btn);
+          isMatch = Math.abs(deposit - targetDeposit) <= 1;
         }
         btn.classList.toggle('active', isMatch);
       });
@@ -2027,7 +2160,8 @@
       document.getElementById('price').value = price;
       syncStampDuty(true);
       syncEstimatedFees(true);
-      document.getElementById('cash').value = getPresetTargetCash(btn);
+      cashDriver = 'deposit';
+      document.getElementById('deposit').value = getPresetTargetDeposit(btn);
       syncPresetButtons();
       calc();
     }
@@ -2037,23 +2171,32 @@
         document.getElementById('price').value = document.getElementById('priceSlider').value;
         syncStampDuty(true);
         syncEstimatedFees(true);
+      } else if (source === 'deposit') {
+        cashDriver = 'deposit';
+        document.getElementById('deposit').value = document.getElementById('depositSlider').value;
       } else {
-        document.getElementById('cash').value = document.getElementById('cashSlider').value;
+        cashDriver = 'totalCash';
+        document.getElementById('totalCash').value = document.getElementById('totalCashSlider').value;
       }
       syncPresetButtons();
       calc();
     }
 
     // Event listeners
-    ['price', 'cash'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => {
-        if (id === 'price') {
-          syncStampDuty(true);
-          syncEstimatedFees(true);
-        }
-        syncPresetButtons();
-        calc();
-      });
+    document.getElementById('price').addEventListener('input', () => {
+      syncStampDuty(true);
+      syncEstimatedFees(true);
+      syncPresetButtons();
+      calc();
+    });
+    document.getElementById('deposit').addEventListener('input', () => {
+      cashDriver = 'deposit';
+      syncPresetButtons();
+      calc();
+    });
+    document.getElementById('totalCash').addEventListener('input', () => {
+      cashDriver = 'totalCash';
+      calc();
     });
     ['rate', 'term', 'legal', 'misc'].forEach(id => {
       document.getElementById(id).addEventListener('input', calc);
@@ -2107,11 +2250,8 @@
     });
     document.getElementById('resetBuffer').addEventListener('click', () => {
       const price = Math.max(0, Number(document.getElementById('price').value) || 0);
-      const cash = Math.max(0, Number(document.getElementById('cash').value) || 0);
-      const stamp = Math.max(0, Number(document.getElementById('stamp').value) || 0);
-      const fixedFees = readAllUpfrontFees();
-      const totalCosts = price + stamp + fixedFees;
-      const loanAmt = Math.max(0, totalCosts - cash);
+      const deposit = Math.max(0, Number(document.getElementById('deposit').value) || 0);
+      const loanAmt = Math.max(0, price - deposit);
       const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
       const term = Math.max(1, Number(document.getElementById('term').value) || 30);
       const monthlyPayment = loanAmt > 0 && rate > 0 ? calcMonthlyPayment(loanAmt, rate, term) : 0;
@@ -2119,7 +2259,8 @@
       calc();
     });
     document.getElementById('priceSlider').addEventListener('input', () => syncFromSlider('price'));
-    document.getElementById('cashSlider').addEventListener('input', () => syncFromSlider('cash'));
+    document.getElementById('depositSlider').addEventListener('input', () => syncFromSlider('deposit'));
+    document.getElementById('totalCashSlider').addEventListener('input', () => syncFromSlider('totalCash'));
     document.getElementById('rateSlider').addEventListener('input', () => {
       document.getElementById('rate').value = document.getElementById('rateSlider').value;
       calc();
