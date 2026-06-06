@@ -1286,7 +1286,9 @@
             <tr><td>Building insurance (1st year)</td><td id="costBuildingInsurance">—</td></tr>
             <tr><td>Home insurance (1st year)</td><td id="costHomeInsurance">—</td></tr>
             <tr><td>Council costs</td><td id="costCouncil">—</td></tr>
-            <tr><td>Total purchase costs</td><td id="costTotal">—</td></tr>
+            <tr class="subtotal"><td>Total purchase costs</td><td id="costTotal">—</td></tr>
+            <tr class="savings-row"><td>Your cash contribution</td><td id="costCash">—</td></tr>
+            <tr><td>Loan amount</td><td id="costLoan">—</td></tr>
             <tr id="costLmiRow"><td>Est. LMI <span style="font-weight:400;color:var(--muted)">(if LVR &gt; 80%)</span></td><td id="costLmi">—</td></tr>
             <tr><td>Recommended buffer (after settlement)</td><td id="costBuffer">—</td></tr>
             <tr><td><strong>Total savings to plan for</strong></td><td id="costSavingsTarget"><strong>—</strong></td></tr>
@@ -1668,6 +1670,8 @@
       document.getElementById('costMisc').textContent = fmt(misc);
       updatePreparednessDisplay(preparedness);
       document.getElementById('costTotal').textContent = fmt(totalCosts);
+      document.getElementById('costCash').textContent = fmt(cash);
+      document.getElementById('costLoan').textContent = fmt(loan);
 
       const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
       const term = Math.max(1, Number(document.getElementById('term').value) || 30);
