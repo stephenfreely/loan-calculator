@@ -807,9 +807,9 @@
           <p class="hint">Total cash you pay upfront (deposit + stamp duty + fees + preparedness extras)</p>
           <div class="input-row">
             <span class="prefix">$</span>
-            <input type="number" id="cash" value="218294" step="1000" min="0">
+            <input type="number" id="cash" value="218334" step="1000" min="0">
           </div>
-          <input type="range" id="cashSlider" min="100000" max="500000" step="1000" value="218294">
+          <input type="range" id="cashSlider" min="100000" max="500000" step="1000" value="218334">
         </div>
       </div>
 
@@ -847,8 +847,8 @@
       <div class="preset-btns">
         <span style="font-size:0.85rem;color:var(--muted);align-self:center;margin-right:4px;">Quick presets:</span>
         <button data-price="800000" data-cash="200000">$800k / $200k cash</button>
-        <button data-price="900000" data-cash="218294" class="active">$900k / 79% LVR</button>
-        <button data-price="1000000" data-cash="301040">$1M / 79% LVR</button>
+        <button data-price="900000" data-lvr="79" class="active">$900k / 79% LVR</button>
+        <button data-price="1000000" data-lvr="79">$1M / 79% LVR</button>
         <button data-price="900000" data-cash="240000">$900k / $240k cash</button>
       </div>
 
@@ -970,7 +970,7 @@
             <p class="hint">First rates instalment or settlement adjustment (~$400–$2,500/yr depending on area)</p>
             <div class="input-row">
               <span class="prefix">$</span>
-              <input type="number" id="council" value="360" step="50" min="0">
+              <input type="number" id="council" value="400" step="50" min="0">
             </div>
             <button type="button" class="reset-link" id="resetFees">↺ Reset all fees to estimates</button>
           </div>
@@ -1332,6 +1332,7 @@
     const PREPAREDNESS_FIELDS = ['moving', 'pest', 'buildingInsurance', 'homeInsurance', 'council'];
 
     const DEFAULT_LEGAL = 1000;
+    const DEFAULT_MISC = 1000;
     const LRS_TRANSFER_REG = 352;
     const LRS_MORTGAGE_REG = 176;
 
@@ -1389,6 +1390,29 @@
 
     function readSettlementFees() {
       return readFee('legal') + readFee('conveyancing') + readFee('searches') + readFee('reg') + readFee('misc');
+    }
+
+    function calcPurchaseTotalsForPrice(price, isFhb) {
+      const stamp = Math.round(calcStampDuty(price, isFhb));
+      const conveyancing = calcConveyancingFee(price);
+      const searches = calcSearchDisbursements(price);
+      const reg = calcRegistryFees();
+      const preparedness = calcPreparednessDefaults(price);
+      const fixedFees = DEFAULT_LEGAL + conveyancing + searches + reg + DEFAULT_MISC + sumPreparednessCosts(preparedness);
+      return { stamp, fixedFees, totalCosts: price + stamp + fixedFees };
+    }
+
+    function calcCashForTargetLvr(price, targetLvr) {
+      const isFhb = document.getElementById('fhb').checked;
+      const { totalCosts } = calcPurchaseTotalsForPrice(price, isFhb);
+      const loan = Math.round(price * targetLvr);
+      return Math.max(0, Math.round(totalCosts - loan));
+    }
+
+    function getPresetTargetCash(btn) {
+      const price = Number(btn.dataset.price) || 0;
+      if (btn.dataset.lvr) return calcCashForTargetLvr(price, Number(btn.dataset.lvr) / 100);
+      return Number(btn.dataset.cash) || 0;
     }
 
     function readAllUpfrontFees() {
@@ -1551,6 +1575,7 @@
     function resetAllFees() {
       const price = Math.max(0, Number(document.getElementById('price').value) || 0);
       document.getElementById('legal').value = DEFAULT_LEGAL;
+      document.getElementById('misc').value = DEFAULT_MISC;
       conveyancingManual = false;
       searchesManual = false;
       registryManual = false;
@@ -1987,9 +2012,24 @@
       const price = Number(document.getElementById('price').value) || 0;
       const cash = Number(document.getElementById('cash').value) || 0;
       document.querySelectorAll('.preset-btns button').forEach(btn => {
-        const isMatch = Number(btn.dataset.price) === price && Number(btn.dataset.cash) === cash;
+        const presetPrice = Number(btn.dataset.price) || 0;
+        let isMatch = presetPrice === price;
+        if (isMatch) {
+          const targetCash = getPresetTargetCash(btn);
+          isMatch = Math.abs(cash - targetCash) <= 1;
+        }
         btn.classList.toggle('active', isMatch);
       });
+    }
+
+    function applyPreset(btn) {
+      const price = Number(btn.dataset.price) || 0;
+      document.getElementById('price').value = price;
+      syncStampDuty(true);
+      syncEstimatedFees(true);
+      document.getElementById('cash').value = getPresetTargetCash(btn);
+      syncPresetButtons();
+      calc();
     }
 
     function syncFromSlider(source) {
@@ -2091,6 +2131,7 @@
     document.getElementById('fhb').addEventListener('change', () => {
       updateFhbLabel(Math.max(0, Number(document.getElementById('price').value) || 0));
       syncStampDuty(true);
+      syncPresetButtons();
       calc();
     });
     document.getElementById('fhbgLocation').addEventListener('change', calc);
@@ -2111,14 +2152,7 @@
     });
 
     document.querySelectorAll('.preset-btns button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.getElementById('price').value = btn.dataset.price;
-        document.getElementById('cash').value = btn.dataset.cash;
-        syncPresetButtons();
-        syncStampDuty(true);
-        syncEstimatedFees(true);
-        calc();
-      });
+      btn.addEventListener('click', () => applyPreset(btn));
     });
 
     syncStampDuty(false);
