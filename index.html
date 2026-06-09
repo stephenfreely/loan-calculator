@@ -932,6 +932,7 @@
         <span style="font-size:0.85rem;color:var(--muted);align-self:center;margin-right:4px;">Quick presets:</span>
         <button data-price="800000" data-deposit="200000">$800k / $200k deposit</button>
         <button data-price="900000" data-lvr="79" class="active">$900k / 79% LVR</button>
+        <button data-price="950000" data-lvr="79">$950k / 79% LVR</button>
         <button data-price="1000000" data-lvr="79">$1M / 79% LVR</button>
         <button data-price="900000" data-deposit="240000">$900k / $240k deposit</button>
       </div>
@@ -1885,6 +1886,7 @@
       document.getElementById('totalCashSlider').max = Math.max(500000, Math.round(totalCosts));
       document.getElementById('totalCashSlider').value = totalCash;
 
+      syncPresetButtons();
       updateRepayments(loan);
       updateFhbLabel(price);
       calcFhbg(price);
@@ -2035,7 +2037,7 @@
         el('plainEnglish').textContent = loan <= 0
           ? (ui.scheme
             ? 'No loan required under this scenario.'
-            : 'No loan needed — you have enough cash to cover all purchase costs.')
+            : 'No loan needed — your deposit covers the full property price.')
           : 'Enter an interest rate to see repayment estimates.';
         if (ui.firstPaymentBar) {
           const barEl = document.getElementById(ui.firstPaymentBar);
