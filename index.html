@@ -373,6 +373,7 @@
     .bar-segment.loan { background: var(--loan); }
     .bar-segment.deposit { background: var(--cash); }
     .bar-segment.fees { background: var(--fees); }
+    .bar-segment.other { background: var(--muted); }
 
     .bar-segment.small-text {
       font-size: 0.65rem;
@@ -850,7 +851,7 @@
       <h1>Home Loan & LVR Calculator</h1>
       <p>Adjust your deposit and see exactly how your loan-to-value ratio (LVR) is calculated — stamp duty and fees are separate and don't affect LVR.</p>
       <p class="fhbg-disclaimer" style="margin-top: 12px; max-width: 640px; margin-left: auto; margin-right: auto;">
-        Rates aligned to <strong>Revenue NSW</strong> transfer duty (2025/26), <strong>FHBAS</strong> (from 1 Jul 2025), and the <strong>5% Deposit Scheme</strong> (from 1 Oct 2025). Estimates only — not legal or financial advice.
+        Rates aligned to <strong>Revenue NSW</strong> transfer duty (2026/27), <strong>FHBAS</strong> (from 1 Jul 2025), and the <strong>5% Deposit Scheme</strong> (from 1 Oct 2025). Estimates only — not legal or financial advice.
       </p>
     </header>
 
@@ -881,9 +882,9 @@
           <p class="hint">Deposit + stamp duty + fees — adjust this or deposit; the other updates automatically</p>
           <div class="input-row">
             <span class="prefix">$</span>
-            <input type="number" id="totalCash" value="218334" step="1000" min="0">
+            <input type="number" id="totalCash" value="218172" step="1000" min="0">
           </div>
-          <input type="range" id="totalCashSlider" min="0" max="500000" step="1000" value="218334">
+          <input type="range" id="totalCashSlider" min="0" max="500000" step="1000" value="218172">
         </div>
       </div>
 
@@ -998,10 +999,10 @@
           </div>
           <div class="field">
             <label for="reg">Land registry (NSW LRS)</label>
-            <p class="hint">Statutory 2025/26: ~$352 transfer registration + ~$176 mortgage (PEXA extra)</p>
+            <p class="hint">Statutory 2026/27: ~$183 transfer registration + ~$183 mortgage (PEXA extra)</p>
             <div class="input-row">
               <span class="prefix">$</span>
-              <input type="number" id="reg" value="528" step="10" min="0">
+              <input type="number" id="reg" value="366" step="10" min="0">
             </div>
           </div>
           <div class="field">
@@ -1085,7 +1086,7 @@
           <label for="fhbgLocation">NSW location (scheme price cap)</label>
           <p class="hint">From 1 Oct 2025: metro/major regional cap $1.5M; rest of NSW $800k</p>
           <select id="fhbgLocation">
-            <option value="metro" selected>Sydney, Newcastle, Illawarra &amp; Lake Macquarie — up to $1,500,000</option>
+            <option value="metro" selected>Sydney &amp; regional centres (Central Coast, Newcastle/Lake Macquarie, Illawarra, Coffs Harbour-Grafton, Mid North Coast, Richmond-Tweed) — up to $1,500,000</option>
             <option value="regional">Rest of NSW — up to $800,000</option>
           </select>
         </div>
@@ -1401,14 +1402,14 @@
     <div class="card" style="background: var(--bg); box-shadow: none; border-style: dashed;">
       <h2 style="font-size: 1rem;">How these figures are calculated</h2>
       <table class="cost-table" style="font-size: 0.85rem;">
-        <tr><td>Transfer duty (standard)</td><td>Revenue NSW 2025/26 marginal rates; premium duty above $3,721,000</td></tr>
+        <tr><td>Transfer duty (standard)</td><td>Revenue NSW 2026/27 marginal rates; premium duty above $3,870,000</td></tr>
         <tr><td>FHB stamp duty concession</td><td>FHBAS: $0 up to $800k; sliding scale $800,001–$999,999 (official table from 1 Jul 2025)</td></tr>
         <tr><td>5% Deposit Scheme</td><td>Min 5% of property value; NSW caps $1.5M (metro centres) / $800k (other) from 1 Oct 2025</td></tr>
         <tr><td>LVR</td><td>Loan ÷ purchase price — based on deposit only; stamp duty and fees are separate (lender may use valuation if different)</td></tr>
         <tr><td>Monthly repayments</td><td>Standard P&amp;I amortisation; max 30-year term per scheme guidance</td></tr>
         <tr><td>LMI estimate</td><td>Indicative % of loan by LVR band if above 80%; $0 under First Home Guarantee</td></tr>
         <tr><td>Cash buffer</td><td>Adjustable; default is greater of $20,000 or 3× monthly repayment</td></tr>
-        <tr><td>Conveyancing estimate</td><td>NSW typical professional fees ~$1,300–$2,400 by price (industry guides 2025/26)</td></tr>
+        <tr><td>Conveyancing estimate</td><td>NSW typical professional fees ~$1,300–$2,400 by price (industry guides 2026/27)</td></tr>
         <tr><td>Search estimate</td><td>Disbursements ~$300–$650 by price (title, council, water, rates certificates)</td></tr>
         <tr><td>Preparedness extras</td><td>Moving, pest inspection, building &amp; home insurance (1st year), council rates — indicative defaults by price</td></tr>
         <tr><td>Not included</td><td>LMI (waived if scheme applies), foreign buyer 9% surcharge, FHOG grant, PEXA (~$130+), strata levies, ongoing utilities</td></tr>
@@ -1435,10 +1436,10 @@
 
     const DEFAULT_LEGAL = 1000;
     const DEFAULT_MISC = 1000;
-    const LRS_TRANSFER_REG = 352;
-    const LRS_MORTGAGE_REG = 176;
+    const LRS_TRANSFER_REG = 183;
+    const LRS_MORTGAGE_REG = 183;
 
-    // NSW conveyancing professional fee tiers (indicative, ex-GST; purchases 2025/26)
+    // NSW conveyancing professional fee tiers (indicative, ex-GST; purchases 2026/27)
     function calcConveyancingFee(price) {
       if (price <= 0) return 1500;
       if (price <= 600000) return 1300;
@@ -1630,15 +1631,15 @@
       return (price - 800000) / 200000 * 39412;
     }
 
-    // Revenue NSW general transfer duty 2025/26 (+ premium duty above $3,721,000)
+    // Revenue NSW general transfer duty 2026/27 (+ premium duty above $3,870,000)
     function calcNswTransferDuty(price) {
-      if (price <= 17000) return Math.max(20, price * 0.0125);
-      if (price <= 37000) return 212 + (price - 17000) * 0.015;
-      if (price <= 99000) return 512 + (price - 37000) * 0.0175;
-      if (price <= 372000) return 1597 + (price - 99000) * 0.035;
-      if (price <= 1240000) return 11152 + (price - 372000) * 0.045;
-      if (price <= 3721000) return 50212 + (price - 1240000) * 0.055;
-      return 186667 + (price - 3721000) * 0.07;
+      if (price <= 18000) return Math.max(20, price * 0.0125);
+      if (price <= 38000) return 225 + (price - 18000) * 0.015;
+      if (price <= 103000) return 525 + (price - 38000) * 0.0175;
+      if (price <= 387000) return 1662 + (price - 103000) * 0.035;
+      if (price <= 1290000) return 11602 + (price - 387000) * 0.045;
+      if (price <= 3870000) return 52237 + (price - 1290000) * 0.055;
+      return 194137 + (price - 3870000) * 0.07;
     }
 
     function calcStampDuty(price, isFhb) {
@@ -1803,7 +1804,7 @@
       renderBar('cashBar', [
         { cls: 'deposit', pct: (deposit / cashTotal) * 100, label: fmt(deposit), minPct: 10 },
         { cls: 'fees', pct: (stamp / cashTotal) * 100, label: fmt(stamp), minPct: 8 },
-        { cls: 'loan', pct: (otherFees / cashTotal) * 100, label: fmt(otherFees), minPct: 8 }
+        { cls: 'other', pct: (otherFees / cashTotal) * 100, label: fmt(otherFees), minPct: 8 }
       ], totalCash, 'Total cash upfront');
       document.getElementById('legDeposit').textContent = fmt(deposit);
       document.getElementById('legStamp').textContent = fmt(stamp);
